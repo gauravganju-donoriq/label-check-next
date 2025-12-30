@@ -152,26 +152,58 @@ export default function NewCheckPage() {
       setComplianceCheckId(checkId);
       setAnalysisProgress(10);
 
-      // Upload panels using streaming (streams directly through server to Azure)
+      // Upload panels directly to Azure using SAS tokens (bypasses Vercel size limits)
       for (let i = 0; i < panels.length; i++) {
         const panel = panels[i];
         setAnalysisStatus(`Uploading ${PANEL_TYPE_LABELS[panel.panelType]}...`);
 
-        // Stream file directly to server, which streams to Azure
-        const uploadRes = await fetch("/api/upload/stream", {
+        // Step 1: Get SAS URL from server (small request)
+        const sasRes = await fetch("/api/upload/get-sas-url", {
           method: "POST",
-          headers: {
-            "Content-Type": panel.file.type,
-            "x-file-name": panel.file.name,
-            "x-panel-type": panel.panelType,
-            "x-check-id": checkId!, // checkId is guaranteed to exist at this point
-          },
-          body: panel.file, // File is streamed, not buffered
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify({
+            fileName: panel.file.name,
+            panelType: panel.panelType,
+            checkId,
+          }),
         });
 
-        if (!uploadRes.ok) {
-          const errorData = await uploadRes.json();
-          throw new Error(errorData.error || "Failed to upload panel");
+        if (!sasRes.ok) {
+          const errorData = await sasRes.json();
+          throw new Error(errorData.error || "Failed to get upload URL");
+        }
+
+        const { sasUrl, blobUrl, contentType } = await sasRes.json();
+
+        // Step 2: Upload file directly to Azure Blob Storage (no size limit)
+        const azureUploadRes = await fetch(sasUrl, {
+          method: "PUT",
+          headers: {
+            "x-ms-blob-type": "BlockBlob",
+            "Content-Type": contentType,
+          },
+          body: panel.file,
+        });
+
+        if (!azureUploadRes.ok) {
+          throw new Error("Failed to upload file to storage");
+        }
+
+        // Step 3: Confirm upload with server to create DB record (small request)
+        const confirmRes = await fetch("/api/upload/confirm", {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify({
+            blobUrl,
+            panelType: panel.panelType,
+            checkId,
+            fileName: panel.file.name,
+          }),
+        });
+
+        if (!confirmRes.ok) {
+          const errorData = await confirmRes.json();
+          throw new Error(errorData.error || "Failed to confirm upload");
         }
 
         setAnalysisProgress(10 + ((i + 1) / panels.length) * 30);
