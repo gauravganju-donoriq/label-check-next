@@ -153,12 +153,6 @@ export default function NewCheckPage() {
       setAnalysisProgress(10);
 
       // Upload panels directly to Azure using SAS tokens
-      const uploadedPanels: Array<{
-        id: string;
-        panelType: string;
-        imageBase64: string;
-      }> = [];
-
       for (let i = 0; i < panels.length; i++) {
         const panel = panels[i];
         setAnalysisStatus(`Uploading ${PANEL_TYPE_LABELS[panel.panelType]}...`);
@@ -212,28 +206,17 @@ export default function NewCheckPage() {
           throw new Error(errorData.error || "Failed to confirm upload");
         }
 
-        const uploadData = await confirmRes.json();
-
-        uploadedPanels.push({
-          id: uploadData.id,
-          panelType: panel.panelType,
-          imageBase64: panel.preview,
-        });
-
         setAnalysisProgress(10 + ((i + 1) / panels.length) * 30);
       }
 
-      // Run AI analysis
+      // Run AI analysis - server fetches images from Azure
       setAnalysisStatus("Running AI analysis...");
       setAnalysisProgress(50);
 
       const analyzeRes = await fetch("/api/analyze", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({
-          checkId,
-          panels: uploadedPanels,
-        }),
+        body: JSON.stringify({ checkId }),
       });
 
       if (!analyzeRes.ok) {

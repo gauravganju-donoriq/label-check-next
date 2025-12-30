@@ -6,7 +6,20 @@ import { headers } from "next/headers";
 import {
   ComplianceCheck,
   ComplianceRule,
+  PanelUpload,
 } from "@/types";
+
+// Helper function to fetch image from Azure and convert to base64
+async function fetchImageAsBase64(blobUrl: string): Promise<string> {
+  const response = await fetch(blobUrl);
+  if (!response.ok) {
+    throw new Error(`Failed to fetch image from storage: ${response.status}`);
+  }
+  const arrayBuffer = await response.arrayBuffer();
+  const base64 = Buffer.from(arrayBuffer).toString("base64");
+  const contentType = response.headers.get("content-type") || "image/jpeg";
+  return `data:${contentType};base64,${base64}`;
+}
 
 export async function POST(request: NextRequest) {
   const session = await auth.api.getSession({ headers: await headers() });
@@ -15,18 +28,13 @@ export async function POST(request: NextRequest) {
   }
 
   const body = await request.json();
-  const { checkId, panels } = body as {
+  const { checkId } = body as {
     checkId: string;
-    panels: Array<{
-      id: string;
-      panelType: string;
-      imageBase64: string;
-    }>;
   };
 
-  if (!checkId || !panels || panels.length === 0) {
+  if (!checkId) {
     return NextResponse.json(
-      { error: "Check ID and panels are required" },
+      { error: "Check ID is required" },
       { status: 400 }
     );
   }
@@ -42,6 +50,19 @@ export async function POST(request: NextRequest) {
 
   if (!check) {
     return NextResponse.json({ error: "Check not found" }, { status: 404 });
+  }
+
+  // Get panels from database (already uploaded to Azure)
+  const panels = await query<PanelUpload>(
+    `SELECT * FROM panel_uploads WHERE compliance_check_id = $1`,
+    [checkId]
+  );
+
+  if (panels.length === 0) {
+    return NextResponse.json(
+      { error: "No panels found for this check" },
+      { status: 400 }
+    );
   }
 
   try {
@@ -67,9 +88,12 @@ export async function POST(request: NextRequest) {
     }> = [];
 
     for (const panel of panels) {
+      // Fetch image from Azure blob storage
+      const imageBase64 = await fetchImageAsBase64(panel.blob_url);
+      
       const extracted = await extractLabelData(
-        panel.imageBase64,
-        panel.panelType,
+        imageBase64,
+        panel.panel_type,
         check.product_type
       );
 
@@ -81,7 +105,7 @@ export async function POST(request: NextRequest) {
 
       extractedPanels.push({
         panelId: panel.id,
-        panelType: panel.panelType,
+        panelType: panel.panel_type,
         extractedData: extracted as unknown as Record<string, unknown>,
       });
     }
