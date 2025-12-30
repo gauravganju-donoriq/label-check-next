@@ -70,13 +70,19 @@ export interface PanelUpload {
 export interface CheckResult {
   id: string;
   compliance_check_id: string;
-  rule_id: string;
+  rule_id: string | null; // Nullable for generated rules
   status: ComplianceStatus;
   found_value: string | null;
   expected_value: string | null;
   explanation: string | null;
   created_at: string;
+  // For persisted rules
   compliance_rule?: ComplianceRule;
+  // For generated (runtime-only) rules
+  is_generated_rule?: boolean;
+  generated_rule_name?: string;
+  generated_rule_description?: string;
+  generated_rule_category?: string;
 }
 
 export const PRODUCT_TYPE_LABELS: Record<ProductType, string> = {

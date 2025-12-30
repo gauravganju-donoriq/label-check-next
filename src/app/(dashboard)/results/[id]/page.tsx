@@ -49,7 +49,7 @@ interface CheckWithDetails extends Omit<ComplianceCheck, "rule_set"> {
   };
   panels: PanelUpload[];
   results: (CheckResult & {
-    compliance_rule: {
+    compliance_rule?: {
       id: string;
       name: string;
       description: string;
@@ -58,6 +58,30 @@ interface CheckWithDetails extends Omit<ComplianceCheck, "rule_set"> {
       validation_prompt: string;
     };
   })[];
+}
+
+// Helper function to get rule name from result (handles both generated and persisted)
+function getRuleName(result: CheckWithDetails["results"][0]): string {
+  if (result.is_generated_rule && result.generated_rule_name) {
+    return result.generated_rule_name;
+  }
+  return result.compliance_rule?.name || "Unknown Rule";
+}
+
+// Helper function to get rule category from result
+function getRuleCategory(result: CheckWithDetails["results"][0]): string {
+  if (result.is_generated_rule && result.generated_rule_category) {
+    return result.generated_rule_category;
+  }
+  return result.compliance_rule?.category || "Other";
+}
+
+// Helper function to get rule description from result
+function getRuleDescription(result: CheckWithDetails["results"][0]): string | null {
+  if (result.is_generated_rule && result.generated_rule_description) {
+    return result.generated_rule_description;
+  }
+  return result.compliance_rule?.description || null;
 }
 
 export default function ResultsPage() {
@@ -126,14 +150,16 @@ export default function ResultsPage() {
       "Found Value",
       "Expected Value",
       "Explanation",
+      "Is Generated Rule",
     ];
     const rows = check.results.map((r) => [
-      r.compliance_rule?.name || "Unknown Rule",
-      r.compliance_rule?.category || "Unknown",
+      getRuleName(r),
+      getRuleCategory(r),
       r.status,
       r.found_value || "",
       r.expected_value || "",
       r.explanation || "",
+      r.is_generated_rule ? "Yes" : "No",
     ]);
 
     const csvContent = [headers, ...rows]
@@ -151,9 +177,12 @@ export default function ResultsPage() {
     URL.revokeObjectURL(url);
   };
 
+  // Check if any results use generated rules
+  const hasGeneratedRules = check?.results.some((r) => r.is_generated_rule);
+
   const groupedResults = check?.results.reduce(
     (acc, result) => {
-      const category = result.compliance_rule?.category || "Other";
+      const category = getRuleCategory(result);
       if (!acc[category]) acc[category] = [];
       acc[category].push(result);
       return acc;
@@ -283,7 +312,16 @@ export default function ResultsPage() {
                 Compliance Results by Category
               </CardTitle>
               <CardDescription>
-                Detailed findings for each compliance rule
+                {hasGeneratedRules ? (
+                  <span className="flex items-center gap-2">
+                    <Badge variant="outline" className="text-xs">
+                      AI Generated Rules
+                    </Badge>
+                    Rules were auto-generated based on {check.rule_set?.state_name || "state"} regulations
+                  </span>
+                ) : (
+                  "Detailed findings for each compliance rule"
+                )}
               </CardDescription>
             </CardHeader>
             <CardContent>
@@ -335,54 +373,69 @@ export default function ResultsPage() {
                           </AccordionTrigger>
                           <AccordionContent className="pb-4">
                             <div className="space-y-3">
-                              {categoryResults.map((result) => (
-                                <div
-                                  key={result.id}
-                                  className="p-4 rounded-lg border border-border bg-card"
-                                >
-                                  <div className="flex items-start justify-between mb-2">
-                                    <div className="flex items-center gap-3">
-                                      {getStatusIcon(result.status)}
-                                      <div>
-                                        <p className="font-medium text-sm">
-                                          {result.compliance_rule?.name ||
-                                            "Unknown Rule"}
-                                        </p>
+                              {categoryResults.map((result) => {
+                                const ruleName = getRuleName(result);
+                                const ruleDescription = getRuleDescription(result);
+                                
+                                return (
+                                  <div
+                                    key={result.id}
+                                    className="p-4 rounded-lg border border-border bg-card"
+                                  >
+                                    <div className="flex items-start justify-between mb-2">
+                                      <div className="flex items-center gap-3">
+                                        {getStatusIcon(result.status)}
+                                        <div>
+                                          <p className="font-medium text-sm">
+                                            {ruleName}
+                                          </p>
+                                          {result.is_generated_rule && (
+                                            <span className="text-xs text-muted-foreground">
+                                              (Auto-generated rule)
+                                            </span>
+                                          )}
+                                        </div>
                                       </div>
+                                      {getStatusBadge(result.status)}
                                     </div>
-                                    {getStatusBadge(result.status)}
-                                  </div>
 
-                                  {result.explanation && (
-                                    <p className="text-sm text-muted-foreground mb-3">
-                                      {result.explanation}
-                                    </p>
-                                  )}
+                                    {ruleDescription && (
+                                      <p className="text-xs text-muted-foreground mb-2 italic">
+                                        {ruleDescription}
+                                      </p>
+                                    )}
 
-                                  <div className="grid grid-cols-2 gap-4 text-sm">
-                                    {result.found_value && (
-                                      <div>
-                                        <p className="text-xs text-muted-foreground uppercase mb-1">
-                                          Found
-                                        </p>
-                                        <p className="font-mono text-xs bg-muted px-2 py-1 rounded">
-                                          {result.found_value}
-                                        </p>
-                                      </div>
+                                    {result.explanation && (
+                                      <p className="text-sm text-muted-foreground mb-3">
+                                        {result.explanation}
+                                      </p>
                                     )}
-                                    {result.expected_value && (
-                                      <div>
-                                        <p className="text-xs text-muted-foreground uppercase mb-1">
-                                          Expected
-                                        </p>
-                                        <p className="font-mono text-xs bg-muted px-2 py-1 rounded">
-                                          {result.expected_value}
-                                        </p>
-                                      </div>
-                                    )}
+
+                                    <div className="grid grid-cols-2 gap-4 text-sm">
+                                      {result.found_value && (
+                                        <div>
+                                          <p className="text-xs text-muted-foreground uppercase mb-1">
+                                            Found
+                                          </p>
+                                          <p className="font-mono text-xs bg-muted px-2 py-1 rounded">
+                                            {result.found_value}
+                                          </p>
+                                        </div>
+                                      )}
+                                      {result.expected_value && (
+                                        <div>
+                                          <p className="text-xs text-muted-foreground uppercase mb-1">
+                                            Expected
+                                          </p>
+                                          <p className="font-mono text-xs bg-muted px-2 py-1 rounded">
+                                            {result.expected_value}
+                                          </p>
+                                        </div>
+                                      )}
+                                    </div>
                                   </div>
-                                </div>
-                              ))}
+                                );
+                              })}
                             </div>
                           </AccordionContent>
                         </AccordionItem>

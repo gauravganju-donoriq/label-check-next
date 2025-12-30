@@ -52,21 +52,25 @@ export async function GET(request: NextRequest, { params }: RouteParams) {
     [id]
   );
 
-  // Get results with rule info
-  const results = await query<CheckResult & { compliance_rule: ComplianceRule }>(
+  // Get results with rule info (handle both persisted and generated rules)
+  const results = await query<CheckResult & { compliance_rule: ComplianceRule | null }>(
     `SELECT cr.*, 
-            json_build_object(
-              'id', r.id,
-              'name', r.name,
-              'description', r.description,
-              'category', r.category,
-              'severity', r.severity,
-              'validation_prompt', r.validation_prompt
-            ) as compliance_rule
+            CASE 
+              WHEN cr.rule_id IS NOT NULL THEN
+                json_build_object(
+                  'id', r.id,
+                  'name', r.name,
+                  'description', r.description,
+                  'category', r.category,
+                  'severity', r.severity,
+                  'validation_prompt', r.validation_prompt
+                )
+              ELSE NULL
+            END as compliance_rule
      FROM check_results cr
-     JOIN compliance_rules r ON r.id = cr.rule_id
+     LEFT JOIN compliance_rules r ON r.id = cr.rule_id
      WHERE cr.compliance_check_id = $1
-     ORDER BY r.category, r.name`,
+     ORDER BY COALESCE(r.category, cr.generated_rule_category), COALESCE(r.name, cr.generated_rule_name)`,
     [id]
   );
 
