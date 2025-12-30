@@ -1,6 +1,6 @@
 "use client";
 
-import { useState, useEffect, useMemo } from "react";
+import { useState, useEffect, useMemo, useCallback } from "react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
@@ -79,17 +79,7 @@ export default function RulesPage() {
   const [newRuleCategory, setNewRuleCategory] = useState("");
   const [newRuleValidationPrompt, setNewRuleValidationPrompt] = useState("");
 
-  useEffect(() => {
-    fetchRuleSets();
-  }, []);
-
-  useEffect(() => {
-    if (selectedRuleSet) {
-      fetchRules(selectedRuleSet.id);
-    }
-  }, [selectedRuleSet]);
-
-  const fetchRuleSets = async () => {
+  const fetchRuleSets = useCallback(async () => {
     try {
       const res = await fetch("/api/rules");
       if (!res.ok) throw new Error("Failed to fetch rule sets");
@@ -105,9 +95,9 @@ export default function RulesPage() {
     } finally {
       setIsLoading(false);
     }
-  };
+  }, [toast]);
 
-  const fetchRules = async (ruleSetId: string) => {
+  const fetchRules = useCallback(async (ruleSetId: string) => {
     setIsLoadingRules(true);
     try {
       const res = await fetch(`/api/rules/${ruleSetId}/rules`);
@@ -124,7 +114,17 @@ export default function RulesPage() {
     } finally {
       setIsLoadingRules(false);
     }
-  };
+  }, [toast]);
+
+  useEffect(() => {
+    fetchRuleSets();
+  }, [fetchRuleSets]);
+
+  useEffect(() => {
+    if (selectedRuleSet) {
+      fetchRules(selectedRuleSet.id);
+    }
+  }, [selectedRuleSet, fetchRules]);
 
   // Filtered data based on search
   const filteredRuleSets = useMemo(() => {

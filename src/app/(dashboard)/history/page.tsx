@@ -1,6 +1,6 @@
 "use client";
 
-import { useEffect, useState } from "react";
+import { useEffect, useState, useCallback } from "react";
 import Link from "next/link";
 import { ComplianceCheck, PRODUCT_TYPE_LABELS } from "@/types";
 import {
@@ -33,11 +33,7 @@ export default function HistoryPage() {
   const [checks, setChecks] = useState<ComplianceCheck[]>([]);
   const [isLoading, setIsLoading] = useState(true);
 
-  useEffect(() => {
-    fetchChecks();
-  }, []);
-
-  const fetchChecks = async () => {
+  const fetchChecks = useCallback(async () => {
     try {
       const res = await fetch("/api/checks");
       if (!res.ok) throw new Error("Failed to fetch checks");
@@ -48,7 +44,11 @@ export default function HistoryPage() {
     } finally {
       setIsLoading(false);
     }
-  };
+  }, []);
+
+  useEffect(() => {
+    fetchChecks();
+  }, [fetchChecks]);
 
   const getStatusIcon = (status: string | null) => {
     switch (status) {

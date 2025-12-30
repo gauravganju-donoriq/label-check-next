@@ -55,7 +55,6 @@ export default function NewCheckPage() {
   const [selectedRuleSetId, setSelectedRuleSetId] = useState<string>("");
   const [productName, setProductName] = useState("");
   const [panels, setPanels] = useState<UploadedPanel[]>([]);
-  const [isAnalyzing, setIsAnalyzing] = useState(false);
   const [analysisProgress, setAnalysisProgress] = useState(0);
   const [analysisStatus, setAnalysisStatus] = useState("");
   const [complianceCheckId, setComplianceCheckId] = useState<string | null>(
@@ -63,11 +62,7 @@ export default function NewCheckPage() {
   );
   const [isLoadingRuleSets, setIsLoadingRuleSets] = useState(true);
 
-  useEffect(() => {
-    fetchRuleSets();
-  }, []);
-
-  const fetchRuleSets = async () => {
+  const fetchRuleSets = useCallback(async () => {
     try {
       const res = await fetch("/api/rules");
       if (!res.ok) throw new Error("Failed to fetch rule sets");
@@ -83,7 +78,11 @@ export default function NewCheckPage() {
     } finally {
       setIsLoadingRuleSets(false);
     }
-  };
+  }, [toast]);
+
+  useEffect(() => {
+    fetchRuleSets();
+  }, [fetchRuleSets]);
 
   const handleFileUpload = useCallback(
     (files: FileList | null, panelType: PanelType) => {
@@ -128,9 +127,11 @@ export default function NewCheckPage() {
   const runAnalysis = async () => {
     if (!selectedRuleSetId) return;
 
-    setIsAnalyzing(true);
     setStep("analyze");
     setAnalysisProgress(0);
+
+    // Track checkId outside try-catch so we can clean up on failure
+    let checkId: string | null = null;
 
     try {
       // Create compliance check record
@@ -147,11 +148,11 @@ export default function NewCheckPage() {
       if (!createRes.ok) throw new Error("Failed to create compliance check");
 
       const checkData = await createRes.json();
-      const checkId = checkData.id;
+      checkId = checkData.id;
       setComplianceCheckId(checkId);
       setAnalysisProgress(10);
 
-      // Upload panels
+      // Upload panels directly to Azure using SAS tokens
       const uploadedPanels: Array<{
         id: string;
         panelType: string;
@@ -162,19 +163,56 @@ export default function NewCheckPage() {
         const panel = panels[i];
         setAnalysisStatus(`Uploading ${PANEL_TYPE_LABELS[panel.panelType]}...`);
 
-        const formData = new FormData();
-        formData.append("file", panel.file);
-        formData.append("panelType", panel.panelType);
-        formData.append("checkId", checkId);
-
-        const uploadRes = await fetch("/api/upload", {
+        // Step 1: Get SAS URL from server
+        const sasRes = await fetch("/api/upload/get-sas-url", {
           method: "POST",
-          body: formData,
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify({
+            fileName: panel.file.name,
+            panelType: panel.panelType,
+            checkId,
+          }),
         });
 
-        if (!uploadRes.ok) throw new Error("Failed to upload panel");
+        if (!sasRes.ok) {
+          const errorData = await sasRes.json();
+          throw new Error(errorData.error || "Failed to get upload URL");
+        }
 
-        const uploadData = await uploadRes.json();
+        const { sasUrl, blobUrl, contentType } = await sasRes.json();
+
+        // Step 2: Upload file directly to Azure Blob Storage
+        const azureUploadRes = await fetch(sasUrl, {
+          method: "PUT",
+          headers: {
+            "x-ms-blob-type": "BlockBlob",
+            "Content-Type": contentType,
+          },
+          body: panel.file,
+        });
+
+        if (!azureUploadRes.ok) {
+          throw new Error("Failed to upload file to storage");
+        }
+
+        // Step 3: Confirm upload with server to create DB record
+        const confirmRes = await fetch("/api/upload/confirm", {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify({
+            blobUrl,
+            panelType: panel.panelType,
+            checkId,
+            fileName: panel.file.name,
+          }),
+        });
+
+        if (!confirmRes.ok) {
+          const errorData = await confirmRes.json();
+          throw new Error(errorData.error || "Failed to confirm upload");
+        }
+
+        const uploadData = await confirmRes.json();
 
         uploadedPanels.push({
           id: uploadData.id,
@@ -221,9 +259,20 @@ export default function NewCheckPage() {
             ? error.message
             : "An error occurred during analysis. Please try again.",
       });
-      // Reset state since the check was deleted on the server due to failure
+
+      // Clean up: delete the compliance check if it was created
+      if (checkId) {
+        try {
+          await fetch(`/api/checks/${checkId}`, {
+            method: "DELETE",
+          });
+        } catch (deleteError) {
+          console.error("Failed to clean up compliance check:", deleteError);
+        }
+      }
+
+      // Reset state
       setComplianceCheckId(null);
-      setIsAnalyzing(false);
       setStep("upload");
     }
   };
@@ -387,6 +436,7 @@ export default function NewCheckPage() {
                         >
                           <X className="w-4 h-4" />
                         </button>
+                        {/* eslint-disable-next-line @next/next/no-img-element */}
                         <img
                           src={existingPanel.preview}
                           alt={label}

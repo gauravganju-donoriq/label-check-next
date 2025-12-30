@@ -1,6 +1,6 @@
 "use client";
 
-import { useEffect, useState } from "react";
+import { useEffect, useState, useCallback } from "react";
 import { useParams } from "next/navigation";
 import Link from "next/link";
 import {
@@ -35,7 +35,7 @@ import {
   Download,
   ArrowLeft,
   FileText,
-  Image,
+  Image as ImageIcon,
   ShieldAlert,
 } from "lucide-react";
 
@@ -67,13 +67,7 @@ export default function ResultsPage() {
   const [check, setCheck] = useState<CheckWithDetails | null>(null);
   const [isLoading, setIsLoading] = useState(true);
 
-  useEffect(() => {
-    if (id) {
-      fetchResults();
-    }
-  }, [id]);
-
-  const fetchResults = async () => {
+  const fetchResults = useCallback(async () => {
     try {
       const res = await fetch(`/api/checks/${id}`);
       if (!res.ok) throw new Error("Failed to fetch results");
@@ -84,7 +78,13 @@ export default function ResultsPage() {
     } finally {
       setIsLoading(false);
     }
-  };
+  }, [id]);
+
+  useEffect(() => {
+    if (id) {
+      fetchResults();
+    }
+  }, [id, fetchResults]);
 
   const getStatusIcon = (status: string) => {
     switch (status) {
@@ -271,7 +271,7 @@ export default function ResultsPage() {
             Compliance Checklist
           </TabsTrigger>
           <TabsTrigger value="panels" className="gap-2">
-            <Image className="w-4 h-4" />
+            <ImageIcon className="w-4 h-4" />
             Uploaded Panels ({check.panels?.length || 0})
           </TabsTrigger>
         </TabsList>

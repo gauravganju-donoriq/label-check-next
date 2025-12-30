@@ -1,9 +1,51 @@
 import {
   BlobServiceClient,
   ContainerClient,
+  StorageSharedKeyCredential,
+  generateBlobSASQueryParameters,
+  BlobSASPermissions,
+  SASProtocol,
 } from "@azure/storage-blob";
 
 let containerClient: ContainerClient | null = null;
+let sharedKeyCredential: StorageSharedKeyCredential | null = null;
+
+function parseConnectionString(connectionString: string): {
+  accountName: string;
+  accountKey: string;
+} {
+  const parts = connectionString.split(";");
+  let accountName = "";
+  let accountKey = "";
+
+  for (const part of parts) {
+    if (part.startsWith("AccountName=")) {
+      accountName = part.substring("AccountName=".length);
+    } else if (part.startsWith("AccountKey=")) {
+      accountKey = part.substring("AccountKey=".length);
+    }
+  }
+
+  if (!accountName || !accountKey) {
+    throw new Error("Invalid connection string: missing AccountName or AccountKey");
+  }
+
+  return { accountName, accountKey };
+}
+
+function getSharedKeyCredential(): StorageSharedKeyCredential {
+  if (sharedKeyCredential) return sharedKeyCredential;
+
+  const connectionString = process.env.AZURE_STORAGE_CONNECTION_STRING!;
+  if (!connectionString) {
+    throw new Error("AZURE_STORAGE_CONNECTION_STRING is not configured");
+  }
+
+  const { accountName, accountKey } = parseConnectionString(connectionString);
+  sharedKeyCredential = new StorageSharedKeyCredential(accountName, accountKey);
+
+  return sharedKeyCredential;
+}
 
 function getContainerClient(): ContainerClient {
   if (containerClient) return containerClient;
@@ -68,5 +110,58 @@ function getContentType(fileName: string): string {
     pdf: "application/pdf",
   };
   return mimeTypes[ext || ""] || "application/octet-stream";
+}
+
+export interface SasUrlResult {
+  sasUrl: string;
+  blobUrl: string;
+  blobName: string;
+  contentType: string;
+}
+
+export async function generateSasUrl(
+  fileName: string,
+  userId: string
+): Promise<SasUrlResult> {
+  const container = getContainerClient();
+  const credential = getSharedKeyCredential();
+  const containerName = process.env.AZURE_STORAGE_CONTAINER_NAME!;
+
+  // Create container if it doesn't exist
+  await container.createIfNotExists({ access: "blob" });
+
+  // Generate unique blob name
+  const timestamp = Date.now();
+  const sanitizedFileName = fileName.replace(/[^a-zA-Z0-9.-]/g, "_");
+  const blobName = `${userId}/${timestamp}_${sanitizedFileName}`;
+  const contentType = getContentType(fileName);
+
+  // Generate SAS token with write permissions, valid for 10 minutes
+  const startsOn = new Date();
+  const expiresOn = new Date(startsOn.getTime() + 10 * 60 * 1000); // 10 minutes
+
+  const sasToken = generateBlobSASQueryParameters(
+    {
+      containerName,
+      blobName,
+      permissions: BlobSASPermissions.parse("cw"), // create and write
+      startsOn,
+      expiresOn,
+      protocol: SASProtocol.Https,
+      contentType, // Set content type in SAS
+    },
+    credential
+  ).toString();
+
+  const blockBlobClient = container.getBlockBlobClient(blobName);
+  const blobUrl = blockBlobClient.url;
+  const sasUrl = `${blobUrl}?${sasToken}`;
+
+  return {
+    sasUrl,
+    blobUrl,
+    blobName,
+    contentType,
+  };
 }
 
