@@ -165,3 +165,36 @@ export async function generateSasUrl(
   };
 }
 
+export async function downloadBlobAsBase64(blobUrl: string): Promise<string> {
+  const container = getContainerClient();
+
+  // Extract blob name from URL
+  const url = new URL(blobUrl);
+  // URL format: https://account.blob.core.windows.net/container/userId/timestamp_filename
+  // pathname is /container/userId/timestamp_filename, we need userId/timestamp_filename
+  const pathParts = url.pathname.split("/");
+  const blobName = pathParts.slice(2).join("/"); // Skip first empty part and container name
+
+  const blockBlobClient = container.getBlockBlobClient(blobName);
+
+  // Download the blob
+  const downloadResponse = await blockBlobClient.download(0);
+
+  if (!downloadResponse.readableStreamBody) {
+    throw new Error("No readable stream body in download response");
+  }
+
+  // Convert stream to buffer
+  const chunks: Buffer[] = [];
+  for await (const chunk of downloadResponse.readableStreamBody) {
+    chunks.push(Buffer.from(chunk));
+  }
+  const buffer = Buffer.concat(chunks);
+
+  // Convert to base64
+  const base64 = buffer.toString("base64");
+  const contentType = downloadResponse.contentType || "image/jpeg";
+
+  return `data:${contentType};base64,${base64}`;
+}
+

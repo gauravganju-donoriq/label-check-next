@@ -2,24 +2,13 @@ import { NextRequest, NextResponse } from "next/server";
 import { auth } from "@/lib/auth";
 import { query, queryOne } from "@/lib/db";
 import { extractLabelData, runComplianceCheck } from "@/lib/gemini";
+import { downloadBlobAsBase64 } from "@/lib/azure-blob";
 import { headers } from "next/headers";
 import {
   ComplianceCheck,
   ComplianceRule,
   PanelUpload,
 } from "@/types";
-
-// Helper function to fetch image from Azure and convert to base64
-async function fetchImageAsBase64(blobUrl: string): Promise<string> {
-  const response = await fetch(blobUrl);
-  if (!response.ok) {
-    throw new Error(`Failed to fetch image from storage: ${response.status}`);
-  }
-  const arrayBuffer = await response.arrayBuffer();
-  const base64 = Buffer.from(arrayBuffer).toString("base64");
-  const contentType = response.headers.get("content-type") || "image/jpeg";
-  return `data:${contentType};base64,${base64}`;
-}
 
 export async function POST(request: NextRequest) {
   const session = await auth.api.getSession({ headers: await headers() });
@@ -88,8 +77,8 @@ export async function POST(request: NextRequest) {
     }> = [];
 
     for (const panel of panels) {
-      // Fetch image from Azure blob storage
-      const imageBase64 = await fetchImageAsBase64(panel.blob_url);
+      // Fetch image from Azure blob storage using SDK (authenticated)
+      const imageBase64 = await downloadBlobAsBase64(panel.blob_url);
       
       const extracted = await extractLabelData(
         imageBase64,
