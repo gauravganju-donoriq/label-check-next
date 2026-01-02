@@ -30,6 +30,8 @@ export interface RuleSet {
   rules_count?: number;
 }
 
+export type GenerationStatus = "new" | "updated" | "unchanged";
+
 export interface ComplianceRule {
   id: string;
   rule_set_id: string;
@@ -38,6 +40,8 @@ export interface ComplianceRule {
   category: string;
   severity: ComplianceSeverity;
   validation_prompt: string;
+  source_citation?: string;
+  generation_status?: GenerationStatus;
   is_active: boolean;
   created_at: string;
   updated_at: string;

@@ -37,6 +37,9 @@ import {
   Edit2,
   ClipboardList,
   Package,
+  Sparkles,
+  Loader2,
+  ExternalLink,
 } from "lucide-react";
 import {
   RuleSet,
@@ -63,6 +66,7 @@ export default function RulesPage() {
   const [isEditRuleModalOpen, setIsEditRuleModalOpen] = useState(false);
   const [editingRule, setEditingRule] = useState<ComplianceRule | null>(null);
   const [isSaving, setIsSaving] = useState(false);
+  const [isGenerating, setIsGenerating] = useState(false);
 
   // Form states for create rule set
   const [newSetName, setNewSetName] = useState("");
@@ -345,6 +349,43 @@ export default function RulesPage() {
     setIsEditRuleModalOpen(true);
   };
 
+  const handleGenerateRules = async () => {
+    if (!selectedRuleSet) return;
+
+    setIsGenerating(true);
+    try {
+      const res = await fetch(`/api/rules/${selectedRuleSet.id}/generate`, {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+      });
+
+      if (!res.ok) {
+        const error = await res.json();
+        throw new Error(error.error || "Failed to generate rules");
+      }
+
+      const data = await res.json();
+
+      // Refresh rules list
+      await fetchRules(selectedRuleSet.id);
+      await fetchRuleSets();
+
+      // Show summary toast
+      const parts = [];
+      if (data.added > 0) parts.push(`${data.added} added`);
+      if (data.updated > 0) parts.push(`${data.updated} updated`);
+      if (data.skipped > 0) parts.push(`${data.skipped} unchanged`);
+
+      toast.success(`Rules generated: ${parts.join(", ")}`);
+    } catch (error) {
+      toast.error(
+        error instanceof Error ? error.message : "Failed to generate rules"
+      );
+    } finally {
+      setIsGenerating(false);
+    }
+  };
+
   return (
     <div className="p-8">
       {/* Header */}
@@ -374,16 +415,31 @@ export default function RulesPage() {
             )}
           </div>
         </div>
-        <Button
-          onClick={() =>
-            selectedRuleSet
-              ? setIsAddRuleModalOpen(true)
-              : setIsCreateSetModalOpen(true)
-          }
-        >
-          <Plus className="w-4 h-4 mr-2" />
-          {selectedRuleSet ? "Add New Rule" : "Create New Rule Set"}
-        </Button>
+        {selectedRuleSet ? (
+          <div className="flex items-center gap-2">
+            <Button
+              variant="outline"
+              onClick={handleGenerateRules}
+              disabled={isGenerating}
+            >
+              {isGenerating ? (
+                <Loader2 className="w-4 h-4 mr-2 animate-spin" />
+              ) : (
+                <Sparkles className="w-4 h-4 mr-2" />
+              )}
+              {isGenerating ? "Generating..." : "Generate Rules"}
+            </Button>
+            <Button onClick={() => setIsAddRuleModalOpen(true)}>
+              <Plus className="w-4 h-4 mr-2" />
+              Add New Rule
+            </Button>
+          </div>
+        ) : (
+          <Button onClick={() => setIsCreateSetModalOpen(true)}>
+            <Plus className="w-4 h-4 mr-2" />
+            Create New Rule Set
+          </Button>
+        )}
       </div>
 
       {/* Search */}
@@ -411,6 +467,7 @@ export default function RulesPage() {
                   <TableHead>Rule Name</TableHead>
                   <TableHead>Category</TableHead>
                   <TableHead>Validation Prompt</TableHead>
+                  <TableHead>Citation</TableHead>
                   <TableHead className="w-[100px]">Actions</TableHead>
                 </>
               ) : (
@@ -429,7 +486,7 @@ export default function RulesPage() {
               isLoadingRules ? (
                 <TableRow>
                   <TableCell
-                    colSpan={4}
+                    colSpan={5}
                     className="text-center py-8 text-muted-foreground"
                   >
                     Loading rules...
@@ -438,7 +495,7 @@ export default function RulesPage() {
               ) : filteredRules.length === 0 ? (
                 <TableRow>
                   <TableCell
-                    colSpan={4}
+                    colSpan={5}
                     className="text-center py-8 text-muted-foreground"
                   >
                     <ClipboardList className="w-12 h-12 mx-auto mb-3 opacity-50" />
@@ -448,12 +505,46 @@ export default function RulesPage() {
               ) : (
                 filteredRules.map((rule) => (
                   <TableRow key={rule.id}>
-                    <TableCell className="font-medium">{rule.name}</TableCell>
+                    <TableCell className="font-medium max-w-sm">
+                      <div className="flex items-start gap-2">
+                        <div className="flex-1">{rule.name}</div>
+                        {rule.generation_status && (
+                          <div className="shrink-0">
+                            <Badge
+                              className={`text-xs capitalize ${
+                                rule.generation_status === "new"
+                                  ? "bg-green-500 hover:bg-green-600 text-white"
+                                  : rule.generation_status === "updated"
+                                  ? "bg-red-500 hover:bg-red-600 text-white"
+                                  : "bg-yellow-500 hover:bg-yellow-600 text-white"
+                              }`}
+                            >
+                              {rule.generation_status}
+                            </Badge>
+                          </div>
+                        )}
+                      </div>
+                    </TableCell>
                     <TableCell>
-                      <Badge variant="outline">{rule.category}</Badge>
+                      <Badge variant="outline" className="whitespace-nowrap">{rule.category}</Badge>
                     </TableCell>
                     <TableCell className="max-w-md truncate">
                       {rule.validation_prompt}
+                    </TableCell>
+                    <TableCell className="text-center">
+                      {rule.source_citation ? (
+                        <a
+                          href={rule.source_citation}
+                          target="_blank"
+                          rel="noopener noreferrer"
+                          className="inline-flex text-blue-500 hover:text-blue-600"
+                          title="View source"
+                        >
+                          <ExternalLink className="w-4 h-4" />
+                        </a>
+                      ) : (
+                        <span className="text-muted-foreground text-sm">—</span>
+                      )}
                     </TableCell>
                     <TableCell>
                       <div className="flex items-center gap-1">

@@ -1,0 +1,268 @@
+{
+    "success": true,
+    "product_type": "concentrates",
+    "source_url": "https://rules.mt.gov/browse/collections/aec52c46-128e-4279-9068-8af5d5432d74/sections/e99998bd-fc2a-4eed-9405-9cfd464de88e",
+    "total_rules_extracted": 37,
+    "rules": [
+      {
+        "rule_name": "Labeling Requirements Applicability",
+        "rule_description": "Labeling requirements apply to marijuana and marijuana products sold from a dispensary to customers and to wholesale products intended for final sale to customers from one licensee to another.",
+        "rule_text_citation": "https://rules.mt.gov/browse/collections/aec52c46-128e-4279-9068-8af5d5432d74/policies/9f2a4d58-3df2-44dd-afed-b097965d151f",
+        "status": "new",
+        "change_reason": null
+      },
+      {
+        "rule_name": "Label Information Display",
+        "rule_description": "All information required on the label of marijuana or a marijuana product must be unobstructed and conspicuous. A licensee may affix multiple labels to a package, or use a booklet, accordion, or other type of label, provided that no required information is completely and permanently obstructed.",
+        "rule_text_citation": "https://rules.mt.gov/browse/collections/aec52c46-128e-4279-9068-8af5d5432d74/policies/9f2a4d58-3df2-44dd-afed-b097965d151f",
+        "status": "new",
+        "change_reason": null
+      },
+      {
+        "rule_name": "Font Legibility and Size",
+        "rule_description": "All required label information must be displayed in a legible font, such as Times New Roman, Arial, or Helvetica. The lowercase letter 'o' must be at least one-sixteenth of an inch in height.",
+        "rule_text_citation": "https://rules.mt.gov/browse/collections/aec52c46-128e-4279-9068-8af5d5432d74/policies/9f2a4d58-3df2-44dd-afed-b097965d151f",
+        "status": "new",
+        "change_reason": null
+      },
+      {
+        "rule_name": "Label Color Contrast",
+        "rule_description": "All required label information must be displayed in a color that contrasts conspicuously with the background.",
+        "rule_text_citation": "https://rules.mt.gov/browse/collections/aec52c46-128e-4279-9068-8af5d5432d74/policies/9f2a4d58-3df2-44dd-afed-b097965d151f",
+        "status": "new",
+        "change_reason": null
+      },
+      {
+        "rule_name": "Label Language",
+        "rule_description": "All required label information must be displayed in English, although a licensee may choose to display required information in additional languages.",
+        "rule_text_citation": "https://rules.mt.gov/browse/collections/aec52c46-128e-4279-9068-8af5d5432d74/policies/9f2a4d58-3df2-44dd-afed-b097965d151f",
+        "status": "new",
+        "change_reason": null
+      },
+      {
+        "rule_name": "Strain Name Identification",
+        "rule_description": "All marijuana or marijuana products must be labeled with the strain name, except when the marijuana or marijuana product contains a mixed strain, then 'mixed strain' must be indicated.",
+        "rule_text_citation": "https://rules.mt.gov/browse/collections/aec52c46-128e-4279-9068-8af5d5432d74/policies/9f2a4d58-3df2-44dd-afed-b097965d151f",
+        "status": "new",
+        "change_reason": null
+      },
+      {
+        "rule_name": "Common Product Name",
+        "rule_description": "All marijuana or marijuana products must be labeled with the common or usual name of the marijuana product (e.g., flower, inhaled extract, edible, cookie, or drinkable, topical, transdermal patch).",
+        "rule_text_citation": "https://rules.mt.gov/browse/collections/aec52c46-128e-4279-9068-8af5d5432d74/policies/9f2a4d58-3df2-44dd-afed-b097965d151f",
+        "status": "new",
+        "change_reason": null
+      },
+      {
+        "rule_name": "Unique Identification Number",
+        "rule_description": "All marijuana or marijuana products must be labeled with the unique identification number generated from the seed-to-sale tracking system correlated to the marijuana or marijuana product's final form testing results.",
+        "rule_text_citation": "https://rules.mt.gov/browse/collections/aec52c46-128e-4279-9068-8af5d5432d74/policies/9f2a4d58-3df2-44dd-afed-b097965d151f",
+        "status": "new",
+        "change_reason": null
+      },
+      {
+        "rule_name": "Harvest or Manufacture Date",
+        "rule_description": "All marijuana or marijuana products must be labeled with the date of harvest for marijuana flower or the date of manufacture for marijuana products.",
+        "rule_text_citation": "https://rules.mt.gov/browse/collections/aec52c46-128e-4279-9068-8af5d5432d74/policies/9f2a4d58-3df2-44dd-afed-b097965d151f",
+        "status": "new",
+        "change_reason": null
+      },
+      {
+        "rule_name": "Net Quantity of Contents Units",
+        "rule_description": "The net quantity of contents of the marijuana product must be stated in U.S. Customary Units and Metric (SI) Units, with the latter enclosed in parentheses.",
+        "rule_text_citation": "https://rules.mt.gov/browse/collections/aec52c46-128e-4279-9068-8af5d5432d74/policies/9f2a4d58-3df2-44dd-afed-b097965d151f",
+        "status": "new",
+        "change_reason": null
+      },
+      {
+        "rule_name": "Net Quantity for Liquid Products",
+        "rule_description": "If the product is a liquid, the net quantity of contents must be expressed in terms of fluid measure and preceded by the phrase 'Net Contents' or 'Net'.",
+        "rule_text_citation": "https://rules.mt.gov/browse/collections/aec52c46-128e-4279-9068-8af5d5432d74/policies/9f2a4d58-3df2-44dd-afed-b097965d151f",
+        "status": "new",
+        "change_reason": null
+      },
+      {
+        "rule_name": "Net Quantity for Solid/Semi-solid/Viscous Products",
+        "rule_description": "If the product is a solid, semi-solid, or viscous, the net quantity of contents must be expressed in terms of weight and preceded by the phrase 'Net Weight,' the abbreviation 'Nt. Wt.,' or 'Net'.",
+        "rule_text_citation": "https://rules.mt.gov/browse/collections/aec52c46-128e-4279-9068-8af5d5432d74/policies/9f2a4d58-3df2-44dd-afed-b097965d151f",
+        "status": "new",
+        "change_reason": null
+      },
+      {
+        "rule_name": "Number of Servings in Net Quantity",
+        "rule_description": "In addition to weight or fluid measure, a licensee must include the number of servings in the net quantity of contents statement if the product is a multi-serving marijuana product (e.g., Net Weight: 2 oz. (56.7 g) (10 cookies), Net Contents: 2 fl. oz. (2 mL or milliliters)).",
+        "rule_text_citation": "https://rules.mt.gov/browse/collections/aec52c46-128e-4279-9068-8af5d5432d74/policies/9f2a4d58-3df2-44dd-afed-b097965d151f",
+        "status": "new",
+        "change_reason": null
+      },
+      {
+        "rule_name": "State Testing Compliance Statement",
+        "rule_description": "All marijuana or marijuana products must be labeled with the verbatim statement: 'This product has been tested and meets the requirements of the state of Montana.'",
+        "rule_text_citation": "https://rules.mt.gov/browse/collections/aec52c46-128e-4279-9068-8af5d5432d74/policies/9f2a4d58-3df2-44dd-afed-b097965d151f",
+        "status": "new",
+        "change_reason": null
+      },
+      {
+        "rule_name": "QR Code for Certificate of Analysis",
+        "rule_description": "All marijuana or marijuana products must be labeled with a QR code that links to the product's certificate of analysis, along with a statement informing customers they can scan the code to see additional product information.",
+        "rule_text_citation": "https://rules.mt.gov/browse/collections/aec52c46-128e-4279-9068-8af5d5432d74/policies/9f2a4d58-3df2-44dd-afed-b097965d151f",
+        "status": "new",
+        "change_reason": null
+      },
+      {
+        "rule_name": "Universal Symbol Size",
+        "rule_description": "The universal symbol, available from the department's website, must be at least .33 inches wide and .33 inches high.",
+        "rule_text_citation": "https://rules.mt.gov/browse/collections/aec52c46-128e-4279-9068-8af5d5432d74/policies/9f2a4d58-3df2-44dd-afed-b097965d151f",
+        "status": "new",
+        "change_reason": null
+      },
+      {
+        "rule_name": "Universal Symbol Coloring Prohibition",
+        "rule_description": "The universal symbol may not be colored by hand and/or using a highlighter, marker, etc.",
+        "rule_text_citation": "https://rules.mt.gov/browse/collections/aec52c46-128e-4279-9068-8af5d5432d74/policies/9f2a4d58-3df2-44dd-afed-b097965d151f",
+        "status": "new",
+        "change_reason": null
+      },
+      {
+        "rule_name": "Universal Symbol Form",
+        "rule_description": "The universal symbol must be in the specific form provided by the department.",
+        "rule_text_citation": "https://rules.mt.gov/browse/collections/aec52c46-128e-4279-9068-8af5d5432d74/policies/9f2a4d58-3df2-44dd-afed-b097965d151f",
+        "status": "new",
+        "change_reason": null
+      },
+      {
+        "rule_name": "Warning: Keep Out of Reach",
+        "rule_description": "All marijuana and marijuana products must be labeled verbatim with the warning: 'Keep out of reach of children and pets'.",
+        "rule_text_citation": "https://rules.mt.gov/browse/collections/aec52c46-128e-4279-9068-8af5d5432d74/policies/9f2a4d58-3df2-44dd-afed-b097965d151f",
+        "status": "new",
+        "change_reason": null
+      },
+      {
+        "rule_name": "Warning: May Be Addictive",
+        "rule_description": "All marijuana and marijuana products must be labeled verbatim with the warning: 'This product may be addictive'.",
+        "rule_text_citation": "https://rules.mt.gov/browse/collections/aec52c46-128e-4279-9068-8af5d5432d74/policies/9f2a4d58-3df2-44dd-afed-b097965d151f",
+        "status": "new",
+        "change_reason": null
+      },
+      {
+        "rule_name": "Warning: Intoxicating Effects and Driving",
+        "rule_description": "All marijuana and marijuana products must be labeled verbatim with the warning: 'This product may have intoxicating effects. Do not drive while under the influence of marijuana.'",
+        "rule_text_citation": "https://rules.mt.gov/browse/collections/aec52c46-128e-4279-9068-8af5d5432d74/policies/9f2a4d58-3df2-44dd-afed-b097965d151f",
+        "status": "new",
+        "change_reason": null
+      },
+      {
+        "rule_name": "Prohibition of False/Misleading Statements",
+        "rule_description": "Marijuana or marijuana product labeling shall not contain any statement or information that is false or misleading.",
+        "rule_text_citation": "https://rules.mt.gov/browse/collections/aec52c46-128e-4279-9068-8af5d5432d74/policies/9f2a4d58-3df2-44dd-afed-b097965d151f",
+        "status": "new",
+        "change_reason": null
+      },
+      {
+        "rule_name": "Manufactured Product Method Identification",
+        "rule_description": "The label of manufactured marijuana products must identify the method of manufacturing (e.g., mechanical, chemical).",
+        "rule_text_citation": "https://rules.mt.gov/browse/collections/aec52c46-128e-4279-9068-8af5d5432d74/policies/9f2a4d58-3df2-44dd-afed-b097965d151f",
+        "status": "new",
+        "change_reason": null
+      },
+      {
+        "rule_name": "Manufactured Product Solvent Identification",
+        "rule_description": "For chemical manufacturing of marijuana products, the label must identify the solvent(s) used in the manufacturing process.",
+        "rule_text_citation": "https://rules.mt.gov/browse/collections/aec52c46-128e-4279-9068-8af5d5432d74/policies/9f2a4d58-3df2-44dd-afed-b097965d151f",
+        "status": "new",
+        "change_reason": null
+      },
+      {
+        "rule_name": "Small Product Font Size Exception",
+        "rule_description": "Marijuana or marijuana products that, because of their size, do not have sufficient space for all of the information required may, if approved by the department pursuant to 16-12-208, MCA, display the information required in subsection (3) in a legible font that does not meet the minimum size requirement established in subsection (2)(b) (lowercase 'o' at least one-sixteenth of an inch in height).",
+        "rule_text_citation": "https://rules.mt.gov/browse/collections/aec52c46-128e-4279-9068-8af5d5432d74/policies/9f2a4d58-3df2-44dd-afed-b097965d151f",
+        "status": "new",
+        "change_reason": null
+      },
+      {
+        "rule_name": "High THC Product: Medical Use Only",
+        "rule_description": "Marijuana or marijuana products in excess of the THC limits in 16-12-224, MCA, which may only be sold to registered cardholders, must contain the verbatim additional information: 'For medical use only'.",
+        "rule_text_citation": "https://rules.mt.gov/browse/collections/aec52c46-128e-4279-9068-8af5d5432d74/policies/9f2a4d58-3df2-44dd-afed-b097965d151f",
+        "status": "new",
+        "change_reason": null
+      },
+      {
+        "rule_name": "High THC Product: FDA Disclaimer",
+        "rule_description": "Marijuana or marijuana products in excess of the THC limits in 16-12-224, MCA, which may only be sold to registered cardholders, must contain the verbatim additional information: 'This product is not approved by the U.S. Food and Drug Administration to treat, cure, or prevent any disease.'",
+        "rule_text_citation": "https://rules.mt.gov/browse/collections/aec52c46-128e-4279-9068-8af5d5432d74/policies/9f2a4d58-3df2-44dd-afed-b097965d151f",
+        "status": "new",
+        "change_reason": null
+      },
+      {
+        "rule_name": "THC Value Restriction for Non-Heat Products",
+        "rule_description": "Marijuana or marijuana products that do not require heat to administer or consume shall not have a total THC or total potential psychoactive THC value listed on the marijuana facts panel.",
+        "rule_text_citation": "https://rules.mt.gov/browse/collections/aec52c46-128e-4279-9068-8af5d5432d74/policies/9f2a4d58-3df2-44dd-afed-b097965d151f",
+        "status": "new",
+        "change_reason": null
+      },
+      {
+        "rule_name": "Ingredients List Content",
+        "rule_description": "Each package of marijuana concentrate must include an ingredients list. This list must include all ingredients by common or usual name, listed in descending order of predominance by weight. It must also state the word \"marijuana\" followed by the specific part of the plant (e.g., flower, trim) from which the concentrate is derived. Substances present in insignificant amounts without technical or functional effect may be excluded.",
+        "rule_text_citation": "https://rules.mt.gov/browse/collections/aec52c46-128e-4279-9068-8af5d5432d74/policies/2187ee9f-3c7f-4f12-837b-78bef8dc406a",
+        "status": "new",
+        "change_reason": null
+      },
+      {
+        "rule_name": "Allergen Statement Requirement",
+        "rule_description": "Each package of marijuana concentrate must include an allergen statement that declares the presence of major food allergens in plain language, unless the concentrate is not intended to be cooked with, eaten, or otherwise swallowed and digested.",
+        "rule_text_citation": "https://rules.mt.gov/browse/collections/aec52c46-128e-4279-9068-8af5d5432d74/policies/2187ee9f-3c7f-4f12-837b-78bef8dc406a",
+        "status": "new",
+        "change_reason": null
+      },
+      {
+        "rule_name": "Marijuana Facts Panel - Heat Required - Percentage Concentration",
+        "rule_description": "For marijuana concentrates that require the application of heat before administration or consumption, the marijuana facts panel must include the percentage concentration of total potential psychoactive THC, THC, THCa, CBD, and CBDa.",
+        "rule_text_citation": "https://rules.mt.gov/browse/collections/aec52c46-128e-4279-9068-8af5d5432d74/policies/2187ee9f-3c7f-4f12-837b-78bef8dc406a",
+        "status": "new",
+        "change_reason": null
+      },
+      {
+        "rule_name": "Marijuana Facts Panel - No Heat Required - Percentage Concentration",
+        "rule_description": "For marijuana concentrates that do not require the application of heat before administration or consumption, the marijuana facts panel must include the percentage concentration of THC, THCa, CBD, and CBDa.",
+        "rule_text_citation": "https://rules.mt.gov/browse/collections/aec52c46-128e-4279-9068-8af5d5432d74/policies/2187ee9f-3c7f-4f12-837b-78bef8dc406a",
+        "status": "new",
+        "change_reason": null
+      },
+      {
+        "rule_name": "Marijuana Facts Panel - No Heat Required - Milligrams per Serving",
+        "rule_description": "For marijuana concentrates that do not require the application of heat before administration or consumption, the marijuana facts panel may alternatively include the milligrams per serving size or dose of THC, THCa, CBD, and CBDa.",
+        "rule_text_citation": "https://rules.mt.gov/browse/collections/aec52c46-128e-4279-9068-8af5d5432d74/policies/2187ee9f-3c7f-4f12-837b-78bef8dc406a",
+        "status": "new",
+        "change_reason": null
+      },
+      {
+        "rule_name": "Marijuana Facts Panel - No Heat Required - Number of Servings",
+        "rule_description": "For marijuana concentrates that do not require the application of heat before administration or consumption, the marijuana facts panel must include the number of servings or doses per package.",
+        "rule_text_citation": "https://rules.mt.gov/browse/collections/aec52c46-128e-4279-9068-8af5d5432d74/policies/2187ee9f-3c7f-4f12-837b-78bef8dc406a",
+        "status": "new",
+        "change_reason": null
+      },
+      {
+        "rule_name": "Delayed Effects Warning for Activated Concentrates",
+        "rule_description": "Each package of activated concentrate that is intended to be cooked with, eaten, or otherwise swallowed and digested must be labeled with the following statement: \"The intoxicating effects of this product may be delayed by two or more hours.\"",
+        "rule_text_citation": "https://rules.mt.gov/browse/collections/aec52c46-128e-4279-9068-8af5d5432d74/policies/2187ee9f-3c7f-4f12-837b-78bef8dc406a",
+        "status": "new",
+        "change_reason": null
+      },
+      {
+        "rule_name": "Marijuana Facts Panel - No Heat Required - Misleading Information Prohibition",
+        "rule_description": "A marijuana facts panel for marijuana concentrates that do not require the application of heat to be administered or consumed may not contain information on the total potential psychoactive THC, total THC, or otherwise mislead customers into believing the product has higher THC levels than it does.",
+        "rule_text_citation": "https://rules.mt.gov/browse/collections/aec52c46-128e-4279-9068-8af5d5432d74/policies/2187ee9f-3c7f-4f12-837b-78bef8dc406a",
+        "status": "new",
+        "change_reason": null
+      },
+      {
+        "rule_name": "Optional Cannabinoid and Terpene Information",
+        "rule_description": "A marijuana facts panel may include information about each additional marketed cannabinoid and terpene, expressed in percentage of concentration by weight or by volume or in milligrams.",
+        "rule_text_citation": "https://rules.mt.gov/browse/collections/aec52c46-128e-4279-9068-8af5d5432d74/policies/2187ee9f-3c7f-4f12-837b-78bef8dc406a",
+        "status": "new",
+        "change_reason": null
+      }
+    ],
+    "error": null
+  }
