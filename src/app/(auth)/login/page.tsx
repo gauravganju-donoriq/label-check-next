@@ -119,7 +119,7 @@ export default function LoginPage() {
         </div>
         <div>
           <CardTitle className="text-xl font-semibold">
-            CannLabel Compliance
+            Cannabi
           </CardTitle>
           <CardDescription className="mt-2">
             {isSignUp ? "Create your account" : "Sign in to your account"}

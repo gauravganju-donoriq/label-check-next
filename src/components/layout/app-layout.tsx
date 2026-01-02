@@ -65,7 +65,7 @@ export default function AppLayout({ children }: AppLayoutProps) {
             </div>
             <div>
               <h1 className="font-semibold text-sidebar-foreground">
-                CannLabel
+                Cannabi
               </h1>
               <p className="text-xs text-muted-foreground">Compliance</p>
             </div>

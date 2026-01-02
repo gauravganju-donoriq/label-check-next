@@ -3,7 +3,7 @@ import "./globals.css";
 import { Toaster } from "@/components/ui/sonner";
 
 export const metadata: Metadata = {
-  title: "CannLabel Compliance",
+  title: "Cannabi",
   description: "Cannabis label compliance checking application",
 };
 
