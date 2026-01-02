@@ -28,7 +28,7 @@ import {
   SelectValue,
 } from "@/components/ui/select";
 import { Badge } from "@/components/ui/badge";
-import { useToast } from "@/hooks/use-toast";
+import { toast } from "sonner";
 import {
   ArrowLeft,
   Plus,
@@ -48,8 +48,6 @@ import {
 } from "@/types";
 
 export default function RulesPage() {
-  const { toast } = useToast();
-
   const [ruleSets, setRuleSets] = useState<RuleSet[]>([]);
   const [rules, setRules] = useState<ComplianceRule[]>([]);
   const [selectedRuleSet, setSelectedRuleSet] = useState<RuleSet | null>(null);
@@ -87,15 +85,11 @@ export default function RulesPage() {
       setRuleSets(data);
     } catch (error) {
       console.error("Error fetching rule sets:", error);
-      toast({
-        variant: "destructive",
-        title: "Error",
-        description: "Failed to fetch rule sets",
-      });
+      toast.error("Failed to fetch rule sets");
     } finally {
       setIsLoading(false);
     }
-  }, [toast]);
+  }, []);
 
   const fetchRules = useCallback(async (ruleSetId: string) => {
     setIsLoadingRules(true);
@@ -106,15 +100,11 @@ export default function RulesPage() {
       setRules(data);
     } catch (error) {
       console.error("Error fetching rules:", error);
-      toast({
-        variant: "destructive",
-        title: "Error",
-        description: "Failed to fetch rules",
-      });
+      toast.error("Failed to fetch rules");
     } finally {
       setIsLoadingRules(false);
     }
-  }, [toast]);
+  }, []);
 
   useEffect(() => {
     fetchRuleSets();
@@ -164,10 +154,7 @@ export default function RulesPage() {
   // Handlers
   const handleCreateRuleSet = async () => {
     if (!newSetName || !newSetStateId || !newSetProductType) {
-      toast({
-        title: "Please fill in all required fields",
-        variant: "destructive",
-      });
+      toast.error("Please fill in all required fields");
       return;
     }
     const selectedState = LEGAL_CANNABIS_STATES.find(
@@ -194,13 +181,9 @@ export default function RulesPage() {
       await fetchRuleSets();
       setIsCreateSetModalOpen(false);
       resetCreateSetForm();
-      toast({ title: "Rule set created successfully" });
+      toast.success("Rule set created successfully");
     } catch (error) {
-      toast({
-        title: "Failed to create rule set",
-        description: error instanceof Error ? error.message : "Unknown error",
-        variant: "destructive",
-      });
+      toast.error(error instanceof Error ? error.message : "Failed to create rule set");
     } finally {
       setIsSaving(false);
     }
@@ -228,13 +211,9 @@ export default function RulesPage() {
       await fetchRuleSets();
       setIsEditSetModalOpen(false);
       setEditingRuleSet(null);
-      toast({ title: "Rule set updated successfully" });
+      toast.success("Rule set updated successfully");
     } catch (error) {
-      toast({
-        title: "Failed to update rule set",
-        description: error instanceof Error ? error.message : "Unknown error",
-        variant: "destructive",
-      });
+      toast.error(error instanceof Error ? error.message : "Failed to update rule set");
     } finally {
       setIsSaving(false);
     }
@@ -247,10 +226,7 @@ export default function RulesPage() {
       !newRuleValidationPrompt ||
       !selectedRuleSet
     ) {
-      toast({
-        title: "Please fill in all required fields",
-        variant: "destructive",
-      });
+      toast.error("Please fill in all required fields");
       return;
     }
 
@@ -272,13 +248,9 @@ export default function RulesPage() {
       await fetchRuleSets();
       setIsAddRuleModalOpen(false);
       resetAddRuleForm();
-      toast({ title: "Rule created successfully" });
+      toast.success("Rule created successfully");
     } catch (error) {
-      toast({
-        title: "Failed to create rule",
-        description: error instanceof Error ? error.message : "Unknown error",
-        variant: "destructive",
-      });
+      toast.error(error instanceof Error ? error.message : "Failed to create rule");
     } finally {
       setIsSaving(false);
     }
@@ -307,13 +279,9 @@ export default function RulesPage() {
       await fetchRules(selectedRuleSet.id);
       setIsEditRuleModalOpen(false);
       setEditingRule(null);
-      toast({ title: "Rule updated successfully" });
+      toast.success("Rule updated successfully");
     } catch (error) {
-      toast({
-        title: "Failed to update rule",
-        description: error instanceof Error ? error.message : "Unknown error",
-        variant: "destructive",
-      });
+      toast.error(error instanceof Error ? error.message : "Failed to update rule");
     } finally {
       setIsSaving(false);
     }
@@ -336,13 +304,9 @@ export default function RulesPage() {
       if (!res.ok) throw new Error("Failed to delete rule set");
 
       await fetchRuleSets();
-      toast({ title: "Rule set deleted successfully" });
+      toast.success("Rule set deleted successfully");
     } catch (error) {
-      toast({
-        title: "Failed to delete rule set",
-        description: error instanceof Error ? error.message : "Unknown error",
-        variant: "destructive",
-      });
+      toast.error(error instanceof Error ? error.message : "Failed to delete rule set");
     }
   };
 
@@ -365,13 +329,9 @@ export default function RulesPage() {
 
       await fetchRules(selectedRuleSet.id);
       await fetchRuleSets();
-      toast({ title: "Rule deleted successfully" });
+      toast.success("Rule deleted successfully");
     } catch (error) {
-      toast({
-        title: "Failed to delete rule",
-        description: error instanceof Error ? error.message : "Unknown error",
-        variant: "destructive",
-      });
+      toast.error(error instanceof Error ? error.message : "Failed to delete rule");
     }
   };
 

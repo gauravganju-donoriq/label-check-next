@@ -8,7 +8,7 @@ import {
   PRODUCT_TYPE_LABELS,
   PANEL_TYPE_LABELS,
 } from "@/types";
-import { useToast } from "@/hooks/use-toast";
+import { toast } from "sonner";
 import {
   Card,
   CardContent,
@@ -48,7 +48,6 @@ type Step = "select" | "upload" | "analyze" | "complete";
 
 export default function NewCheckPage() {
   const router = useRouter();
-  const { toast } = useToast();
 
   const [step, setStep] = useState<Step>("select");
   const [ruleSets, setRuleSets] = useState<RuleSet[]>([]);
@@ -70,15 +69,11 @@ export default function NewCheckPage() {
       setRuleSets(data);
     } catch (error) {
       console.error("Error fetching rule sets:", error);
-      toast({
-        variant: "destructive",
-        title: "Error",
-        description: "Failed to load rule sets",
-      });
+      toast.error("Failed to load rule sets");
     } finally {
       setIsLoadingRuleSets(false);
     }
-  }, [toast]);
+  }, []);
 
   useEffect(() => {
     fetchRuleSets();
@@ -90,11 +85,7 @@ export default function NewCheckPage() {
 
       const file = files[0];
       if (!file.type.startsWith("image/") && file.type !== "application/pdf") {
-        toast({
-          variant: "destructive",
-          title: "Invalid file type",
-          description: "Please upload an image (JPG, PNG) or PDF file.",
-        });
+        toast.error("Please upload an image (JPG, PNG) or PDF file.");
         return;
       }
 
@@ -228,20 +219,14 @@ export default function NewCheckPage() {
       setAnalysisStatus("Analysis complete!");
       setStep("complete");
 
-      toast({
-        title: "Analysis Complete",
-        description: "Your label compliance check has been completed.",
-      });
+      toast.success("Analysis complete! Your label compliance check has been completed.");
     } catch (error) {
       console.error("Analysis error:", error);
-      toast({
-        variant: "destructive",
-        title: "Analysis Failed",
-        description:
-          error instanceof Error
-            ? error.message
-            : "An error occurred during analysis. Please try again.",
-      });
+      toast.error(
+        error instanceof Error
+          ? error.message
+          : "An error occurred during analysis. Please try again."
+      );
 
       // Clean up: delete the compliance check if it was created
       if (checkId) {

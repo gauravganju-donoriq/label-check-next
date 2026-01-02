@@ -13,7 +13,7 @@ import {
   CardHeader,
   CardTitle,
 } from "@/components/ui/card";
-import { useToast } from "@/hooks/use-toast";
+import { toast } from "sonner";
 import { Loader2, Shield } from "lucide-react";
 
 export default function LoginPage() {
@@ -27,7 +27,6 @@ export default function LoginPage() {
 
   const { data: session, isPending } = useSession();
   const router = useRouter();
-  const { toast } = useToast();
 
   useEffect(() => {
     if (session && !isPending) {
@@ -69,17 +68,10 @@ export default function LoginPage() {
           if (message.includes("already registered")) {
             message = "This email is already registered. Please sign in instead.";
           }
-          toast({
-            variant: "destructive",
-            title: "Sign up failed",
-            description: message,
-          });
+          toast.error(message);
           setError(message);
         } else {
-          toast({
-            title: "Account created!",
-            description: "You are now signed in.",
-          });
+          toast.success("Account created! You are now signed in.");
           router.push("/dashboard");
         }
       } else {
@@ -89,17 +81,10 @@ export default function LoginPage() {
         });
 
         if (error) {
-          toast({
-            variant: "destructive",
-            title: "Sign in failed",
-            description: error.message || "Invalid credentials",
-          });
+          toast.error(error.message || "Invalid credentials");
           setError(error.message || "Invalid credentials");
         } else {
-          toast({
-            title: "Welcome back!",
-            description: "You have successfully signed in.",
-          });
+          toast.success("Welcome back! You have successfully signed in.");
           router.push("/dashboard");
         }
       }
