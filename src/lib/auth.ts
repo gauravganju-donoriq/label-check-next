@@ -19,6 +19,12 @@ export const auth = betterAuth({
       maxAge: 5 * 60, // 5 minutes - session cached in cookie, reduces DB queries
     },
   },
+  trustedOrigins: [
+    // Add your production domain
+    "https://label-check-next.vercel.app",
+    // Vercel preview deployments - matches any preview URL for this project
+    "https://*.vercel.app",
+  ],
   plugins: [nextCookies()],
 });
 
