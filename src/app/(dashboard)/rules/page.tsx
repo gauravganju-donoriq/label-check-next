@@ -50,11 +50,14 @@ import {
   LEGAL_CANNABIS_STATES,
 } from "@/types";
 
+type RuleTypeFilter = "all" | "custom" | "generated";
+
 export default function RulesPage() {
   const [ruleSets, setRuleSets] = useState<RuleSet[]>([]);
   const [rules, setRules] = useState<ComplianceRule[]>([]);
   const [selectedRuleSet, setSelectedRuleSet] = useState<RuleSet | null>(null);
   const [searchQuery, setSearchQuery] = useState("");
+  const [ruleTypeFilter, setRuleTypeFilter] = useState<RuleTypeFilter>("all");
   const [isLoading, setIsLoading] = useState(true);
   const [isLoadingRules, setIsLoadingRules] = useState(false);
 
@@ -132,14 +135,27 @@ export default function RulesPage() {
   }, [ruleSets, searchQuery]);
 
   const filteredRules = useMemo(() => {
-    if (!searchQuery) return rules;
-    const query = searchQuery.toLowerCase();
-    return rules.filter(
-      (r) =>
-        r.name.toLowerCase().includes(query) ||
-        r.category.toLowerCase().includes(query)
-    );
-  }, [rules, searchQuery]);
+    let filtered = rules;
+
+    // Apply type filter
+    if (ruleTypeFilter === "custom") {
+      filtered = filtered.filter((r) => !r.generation_status);
+    } else if (ruleTypeFilter === "generated") {
+      filtered = filtered.filter((r) => !!r.generation_status);
+    }
+
+    // Apply search filter
+    if (searchQuery) {
+      const query = searchQuery.toLowerCase();
+      filtered = filtered.filter(
+        (r) =>
+          r.name.toLowerCase().includes(query) ||
+          r.category.toLowerCase().includes(query)
+      );
+    }
+
+    return filtered;
+  }, [rules, searchQuery, ruleTypeFilter]);
 
   // Form reset helpers
   const resetCreateSetForm = () => {
@@ -398,6 +414,7 @@ export default function RulesPage() {
               onClick={() => {
                 setSelectedRuleSet(null);
                 setSearchQuery("");
+                setRuleTypeFilter("all");
               }}
             >
               <ArrowLeft className="w-5 h-5" />
@@ -442,9 +459,9 @@ export default function RulesPage() {
         )}
       </div>
 
-      {/* Search */}
-      <div className="mb-6">
-        <div className="relative max-w-sm">
+      {/* Search and Filter */}
+      <div className="mb-6 flex gap-4 items-center">
+        <div className="relative max-w-sm flex-1">
           <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 w-4 h-4 text-muted-foreground" />
           <Input
             placeholder={
@@ -455,6 +472,21 @@ export default function RulesPage() {
             className="pl-10"
           />
         </div>
+        {selectedRuleSet && (
+          <Select
+            value={ruleTypeFilter}
+            onValueChange={(v) => setRuleTypeFilter(v as RuleTypeFilter)}
+          >
+            <SelectTrigger className="w-[160px]">
+              <SelectValue placeholder="Filter by type" />
+            </SelectTrigger>
+            <SelectContent>
+              <SelectItem value="all">All Rules</SelectItem>
+              <SelectItem value="custom">Custom Only</SelectItem>
+              <SelectItem value="generated">AI Generated</SelectItem>
+            </SelectContent>
+          </Select>
+        )}
       </div>
 
       {/* Table */}
@@ -506,10 +538,10 @@ export default function RulesPage() {
                 filteredRules.map((rule) => (
                   <TableRow key={rule.id}>
                     <TableCell className="font-medium max-w-sm">
-                      <div className="flex items-start gap-2">
+                      <div className="flex items-center gap-2">
                         <div className="flex-1">{rule.name}</div>
-                        {rule.generation_status && (
-                          <div className="shrink-0">
+                        <div className="shrink-0">
+                          {rule.generation_status ? (
                             <Badge
                               className={`text-xs capitalize ${
                                 rule.generation_status === "new"
@@ -521,8 +553,12 @@ export default function RulesPage() {
                             >
                               {rule.generation_status}
                             </Badge>
-                          </div>
-                        )}
+                          ) : (
+                            <Badge className="text-xs bg-blue-500 hover:bg-blue-600 text-white">
+                              Custom
+                            </Badge>
+                          )}
+                        </div>
                       </div>
                     </TableCell>
                     <TableCell>
@@ -597,6 +633,7 @@ export default function RulesPage() {
                   onClick={() => {
                     setSelectedRuleSet(ruleSet);
                     setSearchQuery("");
+                    setRuleTypeFilter("all");
                   }}
                 >
                   <TableCell className="font-medium">{ruleSet.name}</TableCell>

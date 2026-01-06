@@ -3,6 +3,14 @@ import { auth } from "@/lib/auth";
 import { query, queryOne } from "@/lib/db";
 import { headers } from "next/headers";
 import { ComplianceRule, RuleSet } from "@/types";
+import { Agent } from "undici";
+
+// Custom agent with extended timeouts for long-running AI requests
+const longTimeoutAgent = new Agent({
+  headersTimeout: 30 * 60 * 1000, // 30 minutes
+  bodyTimeout: 30 * 60 * 1000,    // 30 minutes
+  connectTimeout: 30 * 1000,      // 30 seconds to connect
+});
 
 interface RouteParams {
   params: Promise<{ id: string }>;
@@ -87,11 +95,8 @@ export async function POST(request: NextRequest, { params }: RouteParams) {
   // Map state name to API format (lowercase, no spaces)
   const stateName = ruleSet.state_name?.toLowerCase().replace(/\s+/g, "-") || "montana";
 
-  // Map product type - the API expects specific values (flower, concentrates, edibles, all)
-  let apiProductType: string = ruleSet.product_type;
-  if (!["flower", "concentrates", "edibles"].includes(ruleSet.product_type)) {
-    apiProductType = "all";
-  }
+  // The API supports: flower, concentrates, edibles, topicals
+  const apiProductType: string = ruleSet.product_type;
 
   // Prepare existing rules for comparison (format expected by external API)
   const existingRulesForApi = existingRules.map((rule) => ({
@@ -101,7 +106,7 @@ export async function POST(request: NextRequest, { params }: RouteParams) {
   }));
 
   try {
-    // Call external API
+    // Call external API with extended timeout (3 minutes for AI processing)
     const apiUrl = process.env.RULES_EXTRACTION_API_URL || "http://localhost:8000";
     const response = await fetch(`${apiUrl}/api/v1/extract-rules`, {
       method: "POST",
@@ -111,6 +116,8 @@ export async function POST(request: NextRequest, { params }: RouteParams) {
         product_type: apiProductType,
         existing_rules: existingRulesForApi,
       }),
+      // @ts-expect-error - dispatcher is a valid undici option for Node.js fetch
+      dispatcher: longTimeoutAgent,
     });
 
     if (!response.ok) {

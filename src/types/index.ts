@@ -1,13 +1,6 @@
 export type ComplianceSeverity = "error" | "warning" | "info";
 export type ComplianceStatus = "pass" | "warning" | "fail";
-export type ProductType =
-  | "flower"
-  | "edibles"
-  | "concentrates"
-  | "topicals"
-  | "tinctures"
-  | "pre_rolls"
-  | "other";
+export type ProductType = "flower" | "edibles" | "concentrates" | "topicals";
 export type PanelType =
   | "front"
   | "back"
@@ -91,12 +84,9 @@ export interface CheckResult {
 
 export const PRODUCT_TYPE_LABELS: Record<ProductType, string> = {
   flower: "Flower",
-  edibles: "Edibles",
   concentrates: "Concentrates",
+  edibles: "Edibles",
   topicals: "Topicals",
-  tinctures: "Tinctures",
-  pre_rolls: "Pre-Rolls",
-  other: "Other",
 };
 
 export const PANEL_TYPE_LABELS: Record<PanelType, string> = {
