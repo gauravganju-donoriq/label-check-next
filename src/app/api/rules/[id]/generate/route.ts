@@ -5,7 +5,7 @@ import { headers } from "next/headers";
 import { ComplianceRule, RuleSet } from "@/types";
 
 // Extend Vercel function timeout (max depends on your plan: 60s hobby, 300s pro)
-export const maxDuration = 300; // 5 minutes
+export const maxDuration = 800; // 5 minutes
 
 interface RouteParams {
   params: Promise<{ id: string }>;
