@@ -21,6 +21,16 @@ import {
   DialogTitle,
 } from "@/components/ui/dialog";
 import {
+  AlertDialog,
+  AlertDialogAction,
+  AlertDialogCancel,
+  AlertDialogContent,
+  AlertDialogDescription,
+  AlertDialogFooter,
+  AlertDialogHeader,
+  AlertDialogTitle,
+} from "@/components/ui/alert-dialog";
+import {
   Select,
   SelectContent,
   SelectItem,
@@ -70,6 +80,11 @@ export default function RulesPage() {
   const [editingRule, setEditingRule] = useState<ComplianceRule | null>(null);
   const [isSaving, setIsSaving] = useState(false);
   const [isGenerating, setIsGenerating] = useState(false);
+  
+  // Delete confirmation states
+  const [deleteRuleSetConfirm, setDeleteRuleSetConfirm] = useState<RuleSet | null>(null);
+  const [deleteRuleConfirm, setDeleteRuleConfirm] = useState<ComplianceRule | null>(null);
+  const [isDeleting, setIsDeleting] = useState(false);
 
   // Form states for create rule set
   const [newSetName, setNewSetName] = useState("");
@@ -307,17 +322,12 @@ export default function RulesPage() {
     }
   };
 
-  const handleDeleteRuleSet = async (ruleSet: RuleSet) => {
-    if (
-      !window.confirm(
-        `Are you sure you want to delete "${ruleSet.name}"? This will also delete all rules in this set.`
-      )
-    ) {
-      return;
-    }
-
+  const handleDeleteRuleSet = async () => {
+    if (!deleteRuleSetConfirm) return;
+    
+    setIsDeleting(true);
     try {
-      const res = await fetch(`/api/rules/${ruleSet.id}`, {
+      const res = await fetch(`/api/rules/${deleteRuleSetConfirm.id}`, {
         method: "DELETE",
       });
 
@@ -327,19 +337,19 @@ export default function RulesPage() {
       toast.success("Rule set deleted successfully");
     } catch (error) {
       toast.error(error instanceof Error ? error.message : "Failed to delete rule set");
+    } finally {
+      setIsDeleting(false);
+      setDeleteRuleSetConfirm(null);
     }
   };
 
-  const handleDeleteRule = async (rule: ComplianceRule) => {
-    if (!selectedRuleSet) return;
+  const handleDeleteRule = async () => {
+    if (!selectedRuleSet || !deleteRuleConfirm) return;
 
-    if (!window.confirm(`Are you sure you want to delete "${rule.name}"?`)) {
-      return;
-    }
-
+    setIsDeleting(true);
     try {
       const res = await fetch(
-        `/api/rules/${selectedRuleSet.id}/rules/${rule.id}`,
+        `/api/rules/${selectedRuleSet.id}/rules/${deleteRuleConfirm.id}`,
         {
           method: "DELETE",
         }
@@ -352,6 +362,9 @@ export default function RulesPage() {
       toast.success("Rule deleted successfully");
     } catch (error) {
       toast.error(error instanceof Error ? error.message : "Failed to delete rule");
+    } finally {
+      setIsDeleting(false);
+      setDeleteRuleConfirm(null);
     }
   };
 
@@ -594,7 +607,7 @@ export default function RulesPage() {
                         <Button
                           variant="ghost"
                           size="icon"
-                          onClick={() => handleDeleteRule(rule)}
+                          onClick={() => setDeleteRuleConfirm(rule)}
                         >
                           <Trash2 className="w-4 h-4 text-destructive" />
                         </Button>
@@ -661,7 +674,7 @@ export default function RulesPage() {
                       <Button
                         variant="ghost"
                         size="icon"
-                        onClick={() => handleDeleteRuleSet(ruleSet)}
+                        onClick={() => setDeleteRuleSetConfirm(ruleSet)}
                       >
                         <Trash2 className="w-4 h-4 text-destructive" />
                       </Button>
@@ -986,6 +999,52 @@ export default function RulesPage() {
           </DialogFooter>
         </DialogContent>
       </Dialog>
+
+      {/* Delete Rule Set Confirmation */}
+      <AlertDialog open={!!deleteRuleSetConfirm} onOpenChange={(open) => !open && setDeleteRuleSetConfirm(null)}>
+        <AlertDialogContent>
+          <AlertDialogHeader>
+            <AlertDialogTitle>Delete Rule Set</AlertDialogTitle>
+            <AlertDialogDescription>
+              Are you sure you want to delete &quot;{deleteRuleSetConfirm?.name}&quot;? 
+              This will also delete all rules in this set. This action cannot be undone.
+            </AlertDialogDescription>
+          </AlertDialogHeader>
+          <AlertDialogFooter>
+            <AlertDialogCancel disabled={isDeleting}>Cancel</AlertDialogCancel>
+            <AlertDialogAction 
+              onClick={handleDeleteRuleSet}
+              disabled={isDeleting}
+              className="bg-destructive text-destructive-foreground hover:bg-destructive/90"
+            >
+              {isDeleting ? "Deleting..." : "Delete"}
+            </AlertDialogAction>
+          </AlertDialogFooter>
+        </AlertDialogContent>
+      </AlertDialog>
+
+      {/* Delete Rule Confirmation */}
+      <AlertDialog open={!!deleteRuleConfirm} onOpenChange={(open) => !open && setDeleteRuleConfirm(null)}>
+        <AlertDialogContent>
+          <AlertDialogHeader>
+            <AlertDialogTitle>Delete Rule</AlertDialogTitle>
+            <AlertDialogDescription>
+              Are you sure you want to delete &quot;{deleteRuleConfirm?.name}&quot;? 
+              This action cannot be undone.
+            </AlertDialogDescription>
+          </AlertDialogHeader>
+          <AlertDialogFooter>
+            <AlertDialogCancel disabled={isDeleting}>Cancel</AlertDialogCancel>
+            <AlertDialogAction 
+              onClick={handleDeleteRule}
+              disabled={isDeleting}
+              className="bg-destructive text-destructive-foreground hover:bg-destructive/90"
+            >
+              {isDeleting ? "Deleting..." : "Delete"}
+            </AlertDialogAction>
+          </AlertDialogFooter>
+        </AlertDialogContent>
+      </AlertDialog>
     </div>
   );
 }
