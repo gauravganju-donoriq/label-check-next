@@ -3,9 +3,14 @@ import { auth } from "@/lib/auth";
 import { query, queryOne } from "@/lib/db";
 import { headers } from "next/headers";
 import { ComplianceRule, RuleSet } from "@/types";
+import { Agent } from "undici";
 
-// Extend Vercel function timeout (max depends on your plan: 60s hobby, 300s pro)
-export const maxDuration = 800; // 5 minutes
+// Custom agent with extended timeouts for long-running AI requests
+const longTimeoutAgent = new Agent({
+  headersTimeout: 30 * 60 * 1000, // 30 minutes
+  bodyTimeout: 30 * 60 * 1000,    // 30 minutes
+  connectTimeout: 30 * 1000,      // 30 seconds to connect
+});
 
 interface RouteParams {
   params: Promise<{ id: string }>;
@@ -103,23 +108,21 @@ export async function POST(request: NextRequest, { params }: RouteParams) {
   try {
     // Call external API with extended timeout (3 minutes for AI processing)
     const apiUrl = process.env.RULES_EXTRACTION_API_URL || "http://localhost:8000";
-    console.log(`Calling external API: ${apiUrl}/api/v1/extract-rules`);
-    console.log(`Request: state=${stateName}, product_type=${apiProductType}, existing_rules=${existingRulesForApi.length}`);
-    
     const response = await fetch(`${apiUrl}/api/v1/extract-rules`, {
       method: "POST",
       headers: { 
         "Content-Type": "application/json",
-        "Connection": "keep-alive",
+        "Connection": "keep-alive" 
       },
       body: JSON.stringify({
         state: stateName,
         product_type: apiProductType,
         existing_rules: existingRulesForApi,
       }),
+      // @ts-expect-error - dispatcher is a valid undici option for Node.js fetch
+      
+      dispatcher: longTimeoutAgent,
     });
-    
-    console.log(`Response status: ${response.status}`);
 
     if (!response.ok) {
       const errorText = await response.text();
