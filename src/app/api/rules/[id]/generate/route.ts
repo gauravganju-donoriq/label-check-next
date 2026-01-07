@@ -3,14 +3,9 @@ import { auth } from "@/lib/auth";
 import { query, queryOne } from "@/lib/db";
 import { headers } from "next/headers";
 import { ComplianceRule, RuleSet } from "@/types";
-import { Agent } from "undici";
 
-// Custom agent with extended timeouts for long-running AI requests
-const longTimeoutAgent = new Agent({
-  headersTimeout: 30 * 60 * 1000, // 30 minutes
-  bodyTimeout: 30 * 60 * 1000,    // 30 minutes
-  connectTimeout: 30 * 1000,      // 30 seconds to connect
-});
+// Extend Vercel function timeout (Pro plan allows up to 300s, you have 800s configured)
+export const maxDuration = 800;
 
 interface RouteParams {
   params: Promise<{ id: string }>;
@@ -33,6 +28,52 @@ interface ExtractionApiResponse {
   total_rules_extracted: number;
   rules: ExtractedRule[];
   error?: string;
+}
+
+// Retry fetch for transient socket errors (undici connection pool race condition)
+async function fetchWithRetry(
+  url: string,
+  options: RequestInit,
+  maxRetries = 3
+): Promise<Response> {
+  let lastError: Error | undefined;
+  
+  for (let attempt = 0; attempt < maxRetries; attempt++) {
+    try {
+      return await fetch(url, options);
+    } catch (error) {
+      lastError = error as Error;
+      
+      // Check if it's a socket/connection error worth retrying
+      // eslint-disable-next-line @typescript-eslint/no-explicit-any
+      const cause = (error as any)?.cause;
+      const isSocketError = 
+        cause?.code === 'UND_ERR_SOCKET' ||
+        cause?.code === 'ECONNRESET' ||
+        cause?.code === 'ECONNREFUSED' ||
+        cause?.code === 'UND_ERR_CONNECT_TIMEOUT';
+      
+      // #region agent log
+      console.log('[DEBUG:FETCH_RETRY]', JSON.stringify({
+        attempt: attempt + 1,
+        maxRetries,
+        errorCode: cause?.code,
+        isSocketError,
+        errorMessage: (error as Error).message,
+        timestamp: Date.now()
+      }));
+      // #endregion
+      
+      if (!isSocketError || attempt === maxRetries - 1) {
+        throw error;
+      }
+      
+      // Brief delay before retry (exponential backoff)
+      await new Promise(resolve => setTimeout(resolve, 100 * Math.pow(2, attempt)));
+    }
+  }
+  
+  throw lastError;
 }
 
 // Map rule name to a category based on keywords
@@ -108,24 +149,51 @@ export async function POST(request: NextRequest, { params }: RouteParams) {
   try {
     // Call external API with extended timeout (3 minutes for AI processing)
     const apiUrl = process.env.RULES_EXTRACTION_API_URL || "http://localhost:8000";
-    const response = await fetch(`${apiUrl}/api/v1/extract-rules`, {
-      method: "POST",
-      headers: { 
-        "Content-Type": "application/json",
-        "Connection": "keep-alive" 
-      },
-      body: JSON.stringify({
-        state: stateName,
-        product_type: apiProductType,
-        existing_rules: existingRulesForApi,
-      }),
-      // @ts-expect-error - dispatcher is a valid undici option for Node.js fetch
-      
-      dispatcher: longTimeoutAgent,
+    const requestBody = JSON.stringify({
+      state: stateName,
+      product_type: apiProductType,
+      existing_rules: existingRulesForApi,
     });
+    
+    // #region agent log
+    console.log('[DEBUG:PRE_FETCH]', JSON.stringify({apiUrl,stateName,apiProductType,existingRulesCount:existingRulesForApi.length,requestBodySize:requestBody.length,timestamp:Date.now()}));
+    // #endregion
+    
+    const fetchStartTime = Date.now();
+    let response: Response;
+    
+    try {
+      // Use fetchWithRetry with Connection: close to avoid socket pool race condition
+      response = await fetchWithRetry(
+        `${apiUrl}/api/v1/extract-rules`,
+        {
+          method: "POST",
+          headers: { 
+            "Content-Type": "application/json",
+            "Connection": "close", // Disable keep-alive to prevent stale socket reuse
+          },
+          body: requestBody,
+        },
+        3 // Max retries
+      );
+    } catch (fetchError) {
+      const fetchDuration = Date.now() - fetchStartTime;
+      // #region agent log
+      console.log('[DEBUG:FETCH_ERROR]', JSON.stringify({errorName:(fetchError as Error).name,errorMessage:(fetchError as Error).message,errorCause:String((fetchError as Error).cause),fetchDuration,timestamp:Date.now()}));
+      // #endregion
+      throw fetchError;
+    }
+    
+    const fetchDuration = Date.now() - fetchStartTime;
+    // #region agent log
+    console.log('[DEBUG:POST_FETCH]', JSON.stringify({status:response.status,statusText:response.statusText,fetchDuration,timestamp:Date.now()}));
+    // #endregion
 
     if (!response.ok) {
       const errorText = await response.text();
+      // #region agent log
+      console.log('[DEBUG:NOT_OK]', JSON.stringify({status:response.status,errorText,timestamp:Date.now()}));
+      // #endregion
       console.error("External API error:", errorText);
       return NextResponse.json(
         { error: "Failed to fetch rules from external API" },
@@ -134,6 +202,9 @@ export async function POST(request: NextRequest, { params }: RouteParams) {
     }
 
     const data: ExtractionApiResponse = await response.json();
+    // #region agent log
+    console.log('[DEBUG:PARSED_JSON]', JSON.stringify({success:data.success,totalRules:data.total_rules_extracted,rulesCount:data.rules?.length,timestamp:Date.now()}));
+    // #endregion
 
     if (!data.success) {
       return NextResponse.json(
@@ -218,6 +289,9 @@ export async function POST(request: NextRequest, { params }: RouteParams) {
       source_url: data.source_url,
     });
   } catch (error) {
+    // #region agent log
+    console.log('[DEBUG:OUTER_CATCH]', JSON.stringify({errorName:(error as Error).name,errorMessage:(error as Error).message,timestamp:Date.now()}));
+    // #endregion
     console.error("Error generating rules:", error);
     return NextResponse.json(
       { error: "Failed to generate rules" },
@@ -225,4 +299,3 @@ export async function POST(request: NextRequest, { params }: RouteParams) {
     );
   }
 }
-
