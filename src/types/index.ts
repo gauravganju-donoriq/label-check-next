@@ -133,6 +133,7 @@ export const LEGAL_CANNABIS_STATES = [
   { id: "new-mexico", name: "New Mexico", abbreviation: "NM" },
   { id: "new-york", name: "New York", abbreviation: "NY" },
   { id: "ohio", name: "Ohio", abbreviation: "OH" },
+  { id: "ontario", name: "Ontario", abbreviation: "ON" },
   { id: "oregon", name: "Oregon", abbreviation: "OR" },
   { id: "rhode-island", name: "Rhode Island", abbreviation: "RI" },
   { id: "vermont", name: "Vermont", abbreviation: "VT" },
