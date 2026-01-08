@@ -3,9 +3,20 @@ import { auth } from "@/lib/auth";
 import { query, queryOne } from "@/lib/db";
 import { headers } from "next/headers";
 import { ComplianceRule, RuleSet } from "@/types";
+import { Agent } from "undici";
 
 // Extend Vercel function timeout (Pro plan allows up to 300s, you have 800s configured)
 export const maxDuration = 800;
+
+// Custom undici agent with extended timeouts for long-running AI extraction
+// Default headersTimeout is 300s which is too short for AI processing
+const longRunningAgent = new Agent({
+  headersTimeout: 600_000,      // 10 minutes (in ms) - wait for initial response headers
+  bodyTimeout: 600_000,         // 10 minutes (in ms) - wait for response body
+  keepAliveTimeout: 10_000,     // 10 seconds - close idle connections quickly
+  keepAliveMaxTimeout: 30_000,  // 30 seconds max
+  connections: 10,
+});
 
 interface RouteParams {
   params: Promise<{ id: string }>;
@@ -30,46 +41,49 @@ interface ExtractionApiResponse {
   error?: string;
 }
 
-// Retry fetch for transient socket errors (undici connection pool race condition)
+// Retry fetch for transient socket/timeout errors (undici connection pool race condition)
 async function fetchWithRetry(
   url: string,
-  options: RequestInit,
+  options: RequestInit & { dispatcher?: Agent },
   maxRetries = 3
 ): Promise<Response> {
   let lastError: Error | undefined;
   
   for (let attempt = 0; attempt < maxRetries; attempt++) {
     try {
-      return await fetch(url, options);
+      return await fetch(url, options); // 'dispatcher' is a valid RequestInit property for undici-fetch in Node.js
     } catch (error) {
       lastError = error as Error;
       
-      // Check if it's a socket/connection error worth retrying
+      // Check if it's a socket/connection/timeout error worth retrying
       // eslint-disable-next-line @typescript-eslint/no-explicit-any
       const cause = (error as any)?.cause;
-      const isSocketError = 
-        cause?.code === 'UND_ERR_SOCKET' ||
-        cause?.code === 'ECONNRESET' ||
-        cause?.code === 'ECONNREFUSED' ||
-        cause?.code === 'UND_ERR_CONNECT_TIMEOUT';
+      const errorCode = cause?.code;
+      const isRetryableError = 
+        errorCode === 'UND_ERR_SOCKET' ||
+        errorCode === 'ECONNRESET' ||
+        errorCode === 'ECONNREFUSED' ||
+        errorCode === 'UND_ERR_CONNECT_TIMEOUT' ||
+        errorCode === 'UND_ERR_HEADERS_TIMEOUT' ||
+        errorCode === 'UND_ERR_BODY_TIMEOUT';
       
       // #region agent log
       console.log('[DEBUG:FETCH_RETRY]', JSON.stringify({
         attempt: attempt + 1,
         maxRetries,
-        errorCode: cause?.code,
-        isSocketError,
+        errorCode,
+        isRetryableError,
         errorMessage: (error as Error).message,
         timestamp: Date.now()
       }));
       // #endregion
       
-      if (!isSocketError || attempt === maxRetries - 1) {
+      if (!isRetryableError || attempt === maxRetries - 1) {
         throw error;
       }
       
       // Brief delay before retry (exponential backoff)
-      await new Promise(resolve => setTimeout(resolve, 100 * Math.pow(2, attempt)));
+      await new Promise(resolve => setTimeout(resolve, 1000 * Math.pow(2, attempt)));
     }
   }
   
@@ -163,7 +177,8 @@ export async function POST(request: NextRequest, { params }: RouteParams) {
     let response: Response;
     
     try {
-      // Use fetchWithRetry with Connection: close to avoid socket pool race condition
+      // Use fetchWithRetry with custom agent for extended timeouts
+      // The longRunningAgent has 10-minute headers/body timeouts for AI processing
       response = await fetchWithRetry(
         `${apiUrl}/api/v1/extract-rules`,
         {
@@ -173,6 +188,7 @@ export async function POST(request: NextRequest, { params }: RouteParams) {
             "Connection": "close", // Disable keep-alive to prevent stale socket reuse
           },
           body: requestBody,
+          dispatcher: longRunningAgent,
         },
         3 // Max retries
       );
