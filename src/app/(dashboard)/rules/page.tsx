@@ -38,6 +38,11 @@ import {
   SelectValue,
 } from "@/components/ui/select";
 import { Badge } from "@/components/ui/badge";
+import {
+  Popover,
+  PopoverContent,
+  PopoverTrigger,
+} from "@/components/ui/popover";
 import { toast } from "sonner";
 import {
   ArrowLeft,
@@ -50,6 +55,7 @@ import {
   Sparkles,
   Loader2,
   ExternalLink,
+  Info,
 } from "lucide-react";
 import {
   RuleSet,
@@ -61,6 +67,16 @@ import {
 } from "@/types";
 
 type RuleTypeFilter = "all" | "custom" | "generated";
+
+// Helper function to detect if a string is a valid URL
+function isUrl(str: string): boolean {
+  try {
+    const url = new URL(str);
+    return url.protocol === "http:" || url.protocol === "https:";
+  } catch {
+    return false;
+  }
+}
 
 export default function RulesPage() {
   const [ruleSets, setRuleSets] = useState<RuleSet[]>([]);
@@ -582,15 +598,37 @@ export default function RulesPage() {
                     </TableCell>
                     <TableCell className="text-center">
                       {rule.source_citation ? (
-                        <a
-                          href={rule.source_citation}
-                          target="_blank"
-                          rel="noopener noreferrer"
-                          className="inline-flex text-blue-500 hover:text-blue-600"
-                          title="View source"
-                        >
-                          <ExternalLink className="w-4 h-4" />
-                        </a>
+                        isUrl(rule.source_citation) ? (
+                          <a
+                            href={rule.source_citation}
+                            target="_blank"
+                            rel="noopener noreferrer"
+                            className="inline-flex text-blue-500 hover:text-blue-600"
+                            title="View source"
+                          >
+                            <ExternalLink className="w-4 h-4" />
+                          </a>
+                        ) : (
+                          <Popover>
+                            <PopoverTrigger asChild>
+                              <Button
+                                variant="ghost"
+                                size="icon"
+                                className="h-8 w-8 text-muted-foreground hover:text-foreground"
+                              >
+                                <Info className="w-4 h-4" />
+                              </Button>
+                            </PopoverTrigger>
+                            <PopoverContent className="w-80">
+                              <div className="space-y-2">
+                                <h4 className="font-medium text-sm">Source Citation</h4>
+                                <p className="text-sm text-muted-foreground">
+                                  {rule.source_citation}
+                                </p>
+                              </div>
+                            </PopoverContent>
+                          </Popover>
+                        )
                       ) : (
                         <span className="text-muted-foreground text-sm">—</span>
                       )}

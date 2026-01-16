@@ -162,7 +162,7 @@ export async function POST(request: NextRequest, { params }: RouteParams) {
 
   try {
     // Call external API with extended timeout (3 minutes for AI processing)
-    const apiUrl = process.env.RULES_EXTRACTION_API_URL || "http://localhost:8000";
+    const apiUrl = process.env.RULES_EXTRACTION_API_URL || "https://langraph-firecrawl.vercel.app";
     const requestBody = JSON.stringify({
       state: stateName,
       product_type: apiProductType,
