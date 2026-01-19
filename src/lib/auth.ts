@@ -13,6 +13,7 @@ export const auth = betterAuth({
   database: pool,
   emailAndPassword: {
     enabled: true,
+    disableSignUp: true, // Only admins can create users via admin panel
   },
   session: {
     cookieCache: {

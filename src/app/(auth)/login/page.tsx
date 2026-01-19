@@ -2,7 +2,7 @@
 
 import { useState, FormEvent, useEffect } from "react";
 import { useRouter } from "next/navigation";
-import { signIn, signUp, useSession } from "@/lib/auth-client";
+import { signIn, useSession } from "@/lib/auth-client";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
@@ -17,12 +17,9 @@ import { toast } from "sonner";
 import { Loader2, Shield } from "lucide-react";
 
 export default function LoginPage() {
-  const [isSignUp, setIsSignUp] = useState(false);
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
-  const [confirmPassword, setConfirmPassword] = useState("");
-  const [name, setName] = useState("");
   const [error, setError] = useState("");
 
   const { data: session, isPending } = useSession();
@@ -43,50 +40,20 @@ export default function LoginPage() {
       return;
     }
 
-    if (isSignUp && password !== confirmPassword) {
-      setError("Passwords don't match");
-      return;
-    }
-
-    if (password.length < 6) {
-      setError("Password must be at least 6 characters");
-      return;
-    }
-
     setIsSubmitting(true);
 
     try {
-      if (isSignUp) {
-        const { error } = await signUp.email({
-          email,
-          password,
-          name: name || email.split("@")[0],
-        });
+      const { error } = await signIn.email({
+        email,
+        password,
+      });
 
-        if (error) {
-          let message = error.message || "Sign up failed";
-          if (message.includes("already registered")) {
-            message = "This email is already registered. Please sign in instead.";
-          }
-          toast.error(message);
-          setError(message);
-        } else {
-          toast.success("Account created! You are now signed in.");
-          router.push("/dashboard");
-        }
+      if (error) {
+        toast.error(error.message || "Invalid credentials");
+        setError(error.message || "Invalid credentials");
       } else {
-        const { error } = await signIn.email({
-          email,
-          password,
-        });
-
-        if (error) {
-          toast.error(error.message || "Invalid credentials");
-          setError(error.message || "Invalid credentials");
-        } else {
-          toast.success("Welcome back! You have successfully signed in.");
-          router.push("/dashboard");
-        }
+        toast.success("Welcome back! You have successfully signed in.");
+        router.push("/dashboard");
       }
     } catch (err) {
       const message = err instanceof Error ? err.message : "An error occurred";
@@ -94,13 +61,6 @@ export default function LoginPage() {
     } finally {
       setIsSubmitting(false);
     }
-  };
-
-  const switchMode = () => {
-    setIsSignUp(!isSignUp);
-    setError("");
-    setPassword("");
-    setConfirmPassword("");
   };
 
   if (isPending) {
@@ -118,30 +78,14 @@ export default function LoginPage() {
           <Shield className="w-6 h-6 text-primary-foreground" />
         </div>
         <div>
-          <CardTitle className="text-xl font-semibold">
-            Cannabi
-          </CardTitle>
+          <CardTitle className="text-xl font-semibold">Cannabi</CardTitle>
           <CardDescription className="mt-2">
-            {isSignUp ? "Create your account" : "Sign in to your account"}
+            Sign in to your account
           </CardDescription>
         </div>
       </CardHeader>
       <CardContent>
         <form onSubmit={handleSubmit} className="space-y-4">
-          {isSignUp && (
-            <div className="space-y-2">
-              <Label htmlFor="name">Full Name</Label>
-              <Input
-                id="name"
-                type="text"
-                placeholder="John Doe"
-                value={name}
-                onChange={(e) => setName(e.target.value)}
-                autoComplete="name"
-              />
-            </div>
-          )}
-
           <div className="space-y-2">
             <Label htmlFor="email">Email</Label>
             <Input
@@ -163,47 +107,19 @@ export default function LoginPage() {
               placeholder="••••••••"
               value={password}
               onChange={(e) => setPassword(e.target.value)}
-              autoComplete={isSignUp ? "new-password" : "current-password"}
+              autoComplete="current-password"
               required
             />
           </div>
-
-          {isSignUp && (
-            <div className="space-y-2">
-              <Label htmlFor="confirmPassword">Confirm Password</Label>
-              <Input
-                id="confirmPassword"
-                type="password"
-                placeholder="••••••••"
-                value={confirmPassword}
-                onChange={(e) => setConfirmPassword(e.target.value)}
-                autoComplete="new-password"
-                required
-              />
-            </div>
-          )}
 
           {error && <p className="text-sm text-destructive">{error}</p>}
 
           <Button type="submit" className="w-full" disabled={isSubmitting}>
             {isSubmitting && <Loader2 className="mr-2 h-4 w-4 animate-spin" />}
-            {isSignUp ? "Create Account" : "Sign In"}
+            Sign In
           </Button>
         </form>
-
-        <div className="mt-6 text-center">
-          <button
-            type="button"
-            onClick={switchMode}
-            className="text-sm text-muted-foreground hover:text-foreground transition-colors"
-          >
-            {isSignUp
-              ? "Already have an account? Sign in"
-              : "Don't have an account? Sign up"}
-          </button>
-        </div>
       </CardContent>
     </Card>
   );
 }
-
