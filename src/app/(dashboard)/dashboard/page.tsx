@@ -38,7 +38,7 @@ export default function DashboardPage() {
       if (!res.ok) throw new Error("Failed to fetch checks");
 
       const checks: ComplianceCheck[] = await res.json();
-      setRecentChecks(checks.slice(0, 5));
+      setRecentChecks(checks.slice(0, 4));
 
       // Calculate stats from completed checks
       const completedChecks = checks.filter((c) => c.overall_status);

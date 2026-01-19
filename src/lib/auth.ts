@@ -1,5 +1,6 @@
 import { betterAuth } from "better-auth";
 import { nextCookies } from "better-auth/next-js";
+import { admin } from "better-auth/plugins";
 import { Pool } from "pg";
 
 const pool = new Pool({
@@ -25,6 +26,6 @@ export const auth = betterAuth({
     // Vercel preview deployments - matches any preview URL for this project
     "https://*.vercel.app",
   ],
-  plugins: [nextCookies()],
+  plugins: [nextCookies(), admin()],
 });
 

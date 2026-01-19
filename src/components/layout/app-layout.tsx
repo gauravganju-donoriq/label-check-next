@@ -1,6 +1,6 @@
 "use client";
 
-import { ReactNode, useEffect } from "react";
+import { ReactNode, useEffect, useMemo } from "react";
 import Link from "next/link";
 import { usePathname, useRouter } from "next/navigation";
 import { useSession, signOut } from "@/lib/auth-client";
@@ -15,23 +15,40 @@ import {
   User,
   ChevronRight,
   ClipboardList,
+  Users,
 } from "lucide-react";
 
 interface AppLayoutProps {
   children: ReactNode;
 }
 
-const navItems = [
+interface NavItem {
+  href: string;
+  label: string;
+  icon: typeof LayoutDashboard;
+  adminOnly?: boolean;
+}
+
+const allNavItems: NavItem[] = [
   { href: "/dashboard", label: "Dashboard", icon: LayoutDashboard },
   { href: "/new-check", label: "New Check", icon: Upload },
   { href: "/history", label: "History", icon: History },
-  { href: "/rules", label: "Rules", icon: ClipboardList },
+  { href: "/rules", label: "Rules", icon: ClipboardList, adminOnly: true },
+  { href: "/manage-users", label: "Manage Users", icon: Users, adminOnly: true },
 ];
 
 export default function AppLayout({ children }: AppLayoutProps) {
   const { data: session, isPending } = useSession();
   const pathname = usePathname();
   const router = useRouter();
+
+  // Check if user is admin
+  const isAdmin = (session?.user as { role?: string })?.role === "admin";
+
+  // Filter nav items based on user role
+  const navItems = useMemo(() => {
+    return allNavItems.filter((item) => !item.adminOnly || isAdmin);
+  }, [isAdmin]);
 
   // Redirect to login if not authenticated
   useEffect(() => {
@@ -54,7 +71,7 @@ export default function AppLayout({ children }: AppLayoutProps) {
   }
 
   return (
-    <div className="min-h-screen bg-background flex">
+    <div className="h-screen bg-background flex">
       {/* Sidebar */}
       <aside className="w-64 bg-sidebar border-r border-sidebar-border flex flex-col">
         {/* Logo */}

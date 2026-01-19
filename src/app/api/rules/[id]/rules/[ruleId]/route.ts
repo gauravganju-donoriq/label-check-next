@@ -3,25 +3,43 @@ import { auth } from "@/lib/auth";
 import { query, queryOne } from "@/lib/db";
 import { headers } from "next/headers";
 import { ComplianceRule, RuleSet } from "@/types";
+import { getEmailDomain } from "@/lib/utils";
 
 interface RouteParams {
   params: Promise<{ id: string; ruleId: string }>;
 }
 
-// PUT update a rule
+// Helper to verify rule set belongs to admin's org
+async function verifyOrgOwnership(
+  ruleSetId: string,
+  adminEmail: string
+): Promise<RuleSet | null> {
+  const orgDomain = getEmailDomain(adminEmail);
+  return queryOne<RuleSet>(
+    `SELECT rs.* FROM rule_sets rs
+     JOIN "user" u ON u.id = rs.user_id
+     WHERE rs.id = $1 AND LOWER(SPLIT_PART(u.email, '@', 2)) = $2`,
+    [ruleSetId, orgDomain]
+  );
+}
+
+// PUT update a rule (admin only, org-scoped)
 export async function PUT(request: NextRequest, { params }: RouteParams) {
   const session = await auth.api.getSession({ headers: await headers() });
   if (!session) {
     return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
   }
 
+  // Only admins can update rules
+  const isAdmin = (session.user as { role?: string }).role === "admin";
+  if (!isAdmin) {
+    return NextResponse.json({ error: "Forbidden" }, { status: 403 });
+  }
+
   const { id, ruleId } = await params;
 
-  // Verify user owns the rule set
-  const ruleSet = await queryOne<RuleSet>(
-    `SELECT id FROM rule_sets WHERE id = $1 AND user_id = $2`,
-    [id, session.user.id]
-  );
+  // Verify rule set belongs to admin's org
+  const ruleSet = await verifyOrgOwnership(id, session.user.email || "");
 
   if (!ruleSet) {
     return NextResponse.json({ error: "Rule set not found" }, { status: 404 });
@@ -52,20 +70,23 @@ export async function PUT(request: NextRequest, { params }: RouteParams) {
   return NextResponse.json(rule);
 }
 
-// DELETE a rule
+// DELETE a rule (admin only, org-scoped)
 export async function DELETE(request: NextRequest, { params }: RouteParams) {
   const session = await auth.api.getSession({ headers: await headers() });
   if (!session) {
     return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
   }
 
+  // Only admins can delete rules
+  const isAdmin = (session.user as { role?: string }).role === "admin";
+  if (!isAdmin) {
+    return NextResponse.json({ error: "Forbidden" }, { status: 403 });
+  }
+
   const { id, ruleId } = await params;
 
-  // Verify user owns the rule set
-  const ruleSet = await queryOne<RuleSet>(
-    `SELECT id FROM rule_sets WHERE id = $1 AND user_id = $2`,
-    [id, session.user.id]
-  );
+  // Verify rule set belongs to admin's org
+  const ruleSet = await verifyOrgOwnership(id, session.user.email || "");
 
   if (!ruleSet) {
     return NextResponse.json({ error: "Rule set not found" }, { status: 404 });

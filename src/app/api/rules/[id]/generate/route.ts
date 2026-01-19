@@ -4,6 +4,7 @@ import { query, queryOne } from "@/lib/db";
 import { headers } from "next/headers";
 import { ComplianceRule, RuleSet } from "@/types";
 import { Agent } from "undici";
+import { getEmailDomain } from "@/lib/utils";
 
 // Extend Vercel function timeout (Pro plan allows up to 300s, you have 800s configured)
 export const maxDuration = 800;
@@ -122,19 +123,28 @@ function inferCategory(ruleName: string, ruleDescription: string): string {
   return "General";
 }
 
-// POST: Generate rules from external API
+// POST: Generate rules from external API (admin only, org-scoped)
 export async function POST(request: NextRequest, { params }: RouteParams) {
   const session = await auth.api.getSession({ headers: await headers() });
   if (!session) {
     return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
   }
 
+  // Only admins can generate rules
+  const isAdmin = (session.user as { role?: string }).role === "admin";
+  if (!isAdmin) {
+    return NextResponse.json({ error: "Forbidden" }, { status: 403 });
+  }
+
   const { id } = await params;
 
-  // Verify user owns the rule set and get its details
+  // Verify rule set belongs to admin's org and get its details
+  const orgDomain = getEmailDomain(session.user.email || "");
   const ruleSet = await queryOne<RuleSet>(
-    `SELECT * FROM rule_sets WHERE id = $1 AND user_id = $2`,
-    [id, session.user.id]
+    `SELECT rs.* FROM rule_sets rs
+     JOIN "user" u ON u.id = rs.user_id
+     WHERE rs.id = $1 AND LOWER(SPLIT_PART(u.email, '@', 2)) = $2`,
+    [id, orgDomain]
   );
 
   if (!ruleSet) {
